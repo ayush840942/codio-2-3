@@ -1,0 +1,224 @@
+
+/* Mobile-specific optimizations for Android compatibility */
+
+/* Prevent zoom on input focus - Critical for Android */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+input[type="tel"],
+input[type="url"],
+input[type="number"],
+textarea,
+select {
+  font-size: 16px !important;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+/* Android-specific input styling */
+input, textarea, select {
+  border-radius: 8px;
+  padding: 12px 16px;
+  line-height: 1.5;
+  transition: all 0.2s ease;
+}
+
+/* Safe area handling for Android notches */
+.safe-area-top {
+  padding-top: max(env(safe-area-inset-top), 24px);
+}
+
+.safe-area-bottom {
+  padding-bottom: max(env(safe-area-inset-bottom), 24px);
+}
+
+.safe-area-left {
+  padding-left: max(env(safe-area-inset-left), 16px);
+}
+
+.safe-area-right {
+  padding-right: max(env(safe-area-inset-right), 16px);
+}
+
+/* Touch optimizations for Android */
+.touch-manipulation {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Smooth scrolling for mobile - Android optimized */
+.mobile-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.mobile-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Remove highlight on tap - Essential for Android */
+.no-tap-highlight {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  outline: none;
+}
+
+/* Hide scrollbars but keep functionality */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Smooth transitions for mobile - Android optimized */
+.mobile-transition {
+  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: transform;
+}
+
+/* Fix for Android rubber band scrolling */
+.prevent-overscroll {
+  overscroll-behavior-y: contain;
+  overscroll-behavior-x: contain;
+}
+
+/* Better button tap targets for Android */
+.mobile-button {
+  min-height: 48px;
+  min-width: 48px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+/* Android keyboard handling */
+.keyboard-adjust {
+  height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for Android */
+}
+
+/* Android notification positioning */
+.android-notification {
+  position: fixed;
+  top: max(env(safe-area-inset-top), 16px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  max-width: calc(100vw - 32px);
+  width: auto;
+  min-width: 280px;
+}
+
+/* Android modal adjustments */
+.android-modal {
+  max-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 32px);
+  margin: max(env(safe-area-inset-top), 16px) 16px max(env(safe-area-inset-bottom), 16px) 16px;
+}
+
+/* Android text selection */
+.android-text-select {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* Android focus styles */
+.android-focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+  border-color: #3b82f6;
+}
+
+/* Android card shadows */
+.android-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Android loading states */
+.android-loading {
+  position: relative;
+  overflow: hidden;
+}
+
+.android-loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  animation: android-shimmer 1.5s infinite;
+}
+
+@keyframes android-shimmer {
+  100% {
+    left: 100%;
+  }
+}
+
+/* Android haptic feedback simulation */
+.android-haptic:active {
+  transform: scale(0.98);
+  transition: transform 0.1s ease;
+}
+
+/* Prevent Android address bar issues */
+.android-fullscreen {
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+/* Android-specific button styles */
+.android-button-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.android-button-primary:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+/* Android input improvements */
+.android-input {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  padding: 16px;
+  font-size: 16px;
+  line-height: 1.5;
+  transition: all 0.3s ease;
+}
+
+.android-input:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  background: white;
+}
