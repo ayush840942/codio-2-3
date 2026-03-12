@@ -65,7 +65,7 @@ const CareerHub = () => {
                 }
             />
 
-            <div className="p-6 max-w-lg mx-auto space-y-8" style={{ paddingTop: 'calc(var(--safe-area-top) + 4rem)' }}>
+            <div className="p-6 max-w-lg mx-auto space-y-8" style={{ paddingTop: 'calc(var(--safe-area-top) + 3.5rem)' }}>
                 {/* Tabs moved to sub-header or sticky in content */}
                 <div className="sticky top-[calc(var(--safe-area-top)+4rem)] z-40 bg-white/80 backdrop-blur-md pt-2 pb-4">
                     <div className="flex p-1.5 bg-black rounded-2xl gap-2 shadow-comic-sm">

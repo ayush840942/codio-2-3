@@ -28,7 +28,7 @@ const HintStorePage: React.FC = () => {
   return (
     <div className="min-h-[100dvh] pb-32">
       <PaymentLoadingOverlay isVisible={isProcessing} />
-      <div className="px-6 space-y-12 max-w-md mx-auto" style={{ paddingTop: 'calc(var(--safe-area-top) + 4rem)' }}>
+      <div className="px-6 space-y-12 max-w-md mx-auto" style={{ paddingTop: 'calc(var(--safe-area-top) + 3.5rem)' }}>
         {/* Unified Mobile Header */}
         <MobileHeader
           title="Hint Shop"

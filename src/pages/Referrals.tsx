@@ -96,7 +96,7 @@ const Referrals = () => {
         }
       />
 
-      <div className="max-w-2xl mx-auto px-6 pb-10 space-y-10" style={{ paddingTop: 'calc(var(--safe-area-top) + 4rem)' }}>
+      <div className="max-w-2xl mx-auto px-6 pb-10 space-y-10" style={{ paddingTop: 'calc(var(--safe-area-top) + 3.5rem)' }}>
         {/* Hero */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}

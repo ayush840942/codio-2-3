@@ -168,7 +168,7 @@ const Memo = () => {
                 }
             />
 
-            <div className="p-6 space-y-8 max-w-4xl mx-auto" style={{ paddingTop: 'calc(var(--safe-area-top) + 4rem)' }}>
+            <div className="p-6 space-y-8 max-w-4xl mx-auto" style={{ paddingTop: 'calc(var(--safe-area-top) + 3.5rem)' }}>
                 {/* Search & Filter */}
                 <div className="space-y-4">
                     <div className="relative">

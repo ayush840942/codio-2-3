@@ -27,7 +27,7 @@ const Leagues = () => {
     const progress = Math.min(100, (weeklyXp / config.nextXp) * 100);
 
     return (
-        <div className="min-h-[100dvh] bg-transparent pb-10 space-y-6" style={{ paddingTop: 'calc(var(--safe-area-top) + 4rem)' }}>
+        <div className="min-h-[100dvh] bg-transparent pb-10 space-y-6" style={{ paddingTop: 'calc(var(--safe-area-top) + 3.5rem)' }}>
             {/* Unified Mobile Header */}
             <MobileHeader
                 title="Leagues"

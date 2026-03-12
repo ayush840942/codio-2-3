@@ -45,14 +45,14 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({
     return (
         <motion.header
             className={cn(
-                "fixed top-0 left-0 right-0 z-[60] flex items-center justify-between px-4 pb-3 bg-white border-b-2 border-black/10 transition-all",
+                "fixed top-0 left-0 right-0 z-[60] flex items-center justify-between px-4 pb-2 bg-white border-b-2 border-black/10 transition-all",
                 className
             )}
             initial={{ y: -60 }}
             animate={{ y: 0 }}
             style={{
                 paddingTop: 'var(--safe-area-top)',
-                height: 'calc(var(--safe-area-top) + 3.5rem)'
+                height: 'calc(var(--safe-area-top) + 3.25rem)'
             }}
         >
             <div className="flex items-center gap-3">

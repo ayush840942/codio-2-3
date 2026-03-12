@@ -173,7 +173,7 @@ const Mastery = () => {
                     onBack={handleBackFromChallenge}
                 />
 
-                <div className="px-6 py-8 max-w-2xl mx-auto" style={{ paddingTop: 'calc(var(--safe-area-top) + 4rem)' }}>
+                <div className="px-6 py-8 max-w-2xl mx-auto" style={{ paddingTop: 'calc(var(--safe-area-top) + 3.5rem)' }}>
                     <CodePracticeEnvironment
                         key={selectedChallenge.id}
                         language={selectedLanguage || 'JavaScript'}
@@ -284,7 +284,7 @@ const Mastery = () => {
                 }
             />
 
-            <div className="px-6 pb-6 max-w-2xl mx-auto space-y-8" style={{ paddingTop: 'calc(var(--safe-area-top) + 4rem)' }}>
+            <div className="px-6 pb-6 max-w-2xl mx-auto space-y-8" style={{ paddingTop: 'calc(var(--safe-area-top) + 3.5rem)' }}>
                 {/* Visual content from before */}
                 <div className="grid grid-cols-2 gap-4">
                     {/* LABS — Pro/Elite only */}

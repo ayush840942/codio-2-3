@@ -64,7 +64,7 @@ const SimpleLevelMap: React.FC<SimpleLevelMapProps> = ({
         }
       />
 
-      <div style={{ paddingTop: 'calc(var(--safe-area-top) + 4rem)' }}>
+      <div style={{ paddingTop: 'calc(var(--safe-area-top) + 3.5rem)' }}>
         <div className="max-w-2xl mx-auto px-4 mb-4">
           <div className="h-4 bg-gray-100 border-3 border-black rounded-full overflow-hidden relative shadow-comic-sm">
             <div
