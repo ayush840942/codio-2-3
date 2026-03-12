@@ -62,7 +62,7 @@ const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({ onComplete })
   const currentStep = steps[step];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-puzzle-light via-white to-puzzle-purple/10 flex items-center justify-center p-4">
+    <div className="min-h-[100dvh] bg-gradient-to-br from-puzzle-light via-white to-puzzle-purple/10 flex items-center justify-center p-4">
       <Card className="w-full max-w-2xl bg-white/95 backdrop-blur-sm border-2 border-puzzle-purple/20 shadow-2xl">
         <CardContent className="p-8">
           <motion.div

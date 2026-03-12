@@ -1,11 +1,10 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Play, BookOpen, Target, Star } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { ArrowLeft, ArrowRight, Play, BookOpen } from 'lucide-react';
+import { DrawnButton, DrawnCard } from '@/components/ui/HandDrawnComponents';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+import MobileHeader from '@/components/MobileHeader';
 import { MobileScrollArea } from '@/components/ui/mobile-scroll-area';
 
 interface MobileLearningLayoutProps {
@@ -18,6 +17,7 @@ interface MobileLearningLayoutProps {
   onStart: () => void;
   topic: string;
   difficulty: 'easy' | 'medium' | 'hard';
+  isNextDisabled?: boolean;
 }
 
 const MobileLearningLayout: React.FC<MobileLearningLayoutProps> = ({
@@ -29,56 +29,51 @@ const MobileLearningLayout: React.FC<MobileLearningLayoutProps> = ({
   onPrevious,
   onStart,
   topic,
-  difficulty
+  difficulty,
+  isNextDisabled = false
 }) => {
   const progress = ((currentPage + 1) / totalPages) * 100;
-  
+
   const getDifficultyColor = (diff: string) => {
     switch (diff) {
-      case 'easy': return 'bg-green-100 text-green-700 border-green-300';
-      case 'medium': return 'bg-yellow-100 text-yellow-700 border-yellow-300';
-      case 'hard': return 'bg-red-100 text-red-700 border-red-300';
-      default: return 'bg-gray-100 text-gray-700 border-gray-300';
+      case 'easy': return 'bg-pastel-mint border-black';
+      case 'medium': return 'bg-pastel-yellow border-black';
+      case 'hard': return 'bg-pastel-pink border-black';
+      default: return 'bg-white border-black';
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-200">
-        <div className="max-w-2xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-3">
-              <BookOpen className="h-6 w-6 text-blue-600" />
-              <div>
-                <h1 className="text-lg font-bold text-gray-900">{title}</h1>
-                <div className="flex items-center gap-2 mt-1">
-                  <Badge className={`text-xs px-2 py-1 ${getDifficultyColor(difficulty)}`}>
-                    {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
-                  </Badge>
-                  <Badge className="bg-blue-100 text-blue-700 text-xs px-2 py-1">
-                    {topic}
-                  </Badge>
-                </div>
-              </div>
-            </div>
-            <div className="text-sm text-gray-500">
-              {currentPage + 1} / {totalPages}
-            </div>
+    <div className="min-h-[100dvh] bg-transparent font-draw">
+      {/* Unified Mobile Header */}
+      <MobileHeader
+        title={title}
+        showBack
+        rightElement={
+          <div className="text-xl font-black text-black">
+            {currentPage + 1} / {totalPages}
           </div>
-          
-          <Progress value={progress} className="h-2" />
+        }
+      />
+
+      <div className="p-4" style={{ paddingTop: 'calc(var(--safe-area-top) + 4.5rem)' }}>
+        <div className="h-4 bg-white border-3 border-black rounded-full overflow-hidden shadow-comic-sm">
+          <motion.div
+            className="h-full bg-pastel-blue border-r-3 border-black"
+            initial={{ width: 0 }}
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 0.5 }}
+          />
         </div>
       </div>
 
       {/* Content with Mobile Scroll */}
-      <MobileScrollArea className="h-[calc(100vh-200px)]">
-        <div className="max-w-2xl mx-auto px-4 py-6">
+      <MobileScrollArea className="h-[calc(100vh-220px)]">
+        <div className="max-w-2xl mx-auto px-4 py-4">
           <motion.div
             key={currentPage}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
           >
             {children}
@@ -87,36 +82,39 @@ const MobileLearningLayout: React.FC<MobileLearningLayoutProps> = ({
       </MobileScrollArea>
 
       {/* Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200 p-4">
-        <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <Button
-            variant="outline"
-            onClick={onPrevious}
-            disabled={currentPage === 0}
-            className="flex items-center gap-2 px-4 py-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Previous
-          </Button>
+      <div className="fixed bottom-0 left-0 right-0 p-4 z-20">
+        <DrawnCard className="py-4 px-4 bg-white/80 backdrop-blur-md">
+          <div className="max-w-2xl mx-auto flex items-center justify-between gap-4">
+            <DrawnButton
+              variant="outlined"
+              onClick={onPrevious}
+              disabled={currentPage === 0}
+              className="flex-1 h-14 text-lg bg-white disabled:opacity-30"
+            >
+              <ArrowLeft className="h-6 w-6 mr-2" />
+              Back
+            </DrawnButton>
 
-          {currentPage === totalPages - 1 ? (
-            <Button
-              onClick={onStart}
-              className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white"
-            >
-              <Play className="h-4 w-4" />
-              Start Coding
-            </Button>
-          ) : (
-            <Button
-              onClick={onNext}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white"
-            >
-              Next
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
+            {currentPage === totalPages - 1 ? (
+              <DrawnButton
+                onClick={onStart}
+                className="flex-[1.5] h-14 text-xl bg-pastel-yellow"
+              >
+                <Play className="h-6 w-6 mr-2 fill-black" />
+                START
+              </DrawnButton>
+            ) : (
+              <DrawnButton
+                onClick={onNext}
+                disabled={isNextDisabled}
+                className={`flex-1 h-14 text-lg bg-pastel-blue transition-all ${isNextDisabled ? 'opacity-50 grayscale cursor-not-allowed' : 'hover:bg-blue-300'}`}
+              >
+                Next
+                <ArrowRight className={`h-6 w-6 ml-2 ${isNextDisabled ? 'opacity-30' : ''}`} />
+              </DrawnButton>
+            )}
+          </div>
+        </DrawnCard>
       </div>
     </div>
   );

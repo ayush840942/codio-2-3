@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useHearts } from '@/context/HeartsContext';
 import { useGame } from '@/context/GameContext';
+import { useRewards } from '@/context/RewardsContext';
 import { HEARTS_CONFIG } from '@/data/heartsData';
 
 interface HeartsShopProps {
@@ -15,6 +16,7 @@ interface HeartsShopProps {
 export const HeartsShop: React.FC<HeartsShopProps> = ({ isOpen, onClose }) => {
     const { hearts, maxHearts, purchaseHeart, timeUntilNextHeart } = useHearts();
     const { gameState, updateXP } = useGame();
+    const { rewards } = useRewards();
     const [purchasing, setPurchasing] = useState(false);
 
     const formatTime = (ms: number) => {
@@ -27,7 +29,7 @@ export const HeartsShop: React.FC<HeartsShopProps> = ({ isOpen, onClose }) => {
     const handlePurchase = async () => {
         setPurchasing(true);
 
-        const result = purchaseHeart(gameState.xp || 0);
+        const result = purchaseHeart(rewards?.xp || 0);
 
         if (result.success) {
             updateXP(result.newXP);
@@ -41,7 +43,7 @@ export const HeartsShop: React.FC<HeartsShopProps> = ({ isOpen, onClose }) => {
         }
     };
 
-    const canAfford = (gameState.xp || 0) >= HEARTS_CONFIG.XP_COST_PER_HEART;
+    const canAfford = (rewards?.xp || 0) >= HEARTS_CONFIG.XP_COST_PER_HEART;
     const isFull = hearts >= maxHearts;
 
     return (
@@ -81,8 +83,8 @@ export const HeartsShop: React.FC<HeartsShopProps> = ({ isOpen, onClose }) => {
                                         <Heart
                                             key={index}
                                             className={`w-12 h-12 ${index < hearts
-                                                    ? 'fill-red-500 text-red-500'
-                                                    : 'fill-slate-200 text-slate-300'
+                                                ? 'fill-red-500 text-red-500'
+                                                : 'fill-slate-200 text-slate-300'
                                                 }`}
                                         />
                                     ))}
@@ -139,7 +141,7 @@ export const HeartsShop: React.FC<HeartsShopProps> = ({ isOpen, onClose }) => {
                                         <span className="text-sm font-bold text-slate-600">Your XP</span>
                                         <div className="flex items-center gap-1.5">
                                             <Zap className="w-4 h-4 text-slate-800" />
-                                            <span className="font-black text-slate-900">{gameState.xp || 0}</span>
+                                            <span className="font-black text-slate-900">{rewards?.xp || 0}</span>
                                         </div>
                                     </div>
                                 </div>

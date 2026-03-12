@@ -1,6 +1,6 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import MobileHeader from "@/components/MobileHeader";
 import { useGame } from '@/context/GameContext';
 import NavBar from '@/components/NavBar';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,7 @@ let age = 25;
 let isStudent = true;
 
 console.log(name);
-console.log(age);`,
+console.log(age); `,
   python: `# Python code
 name = "John"
 age = 25
@@ -27,15 +27,15 @@ print(name)
 print(age)`,
   java: `// Java code
 public class Variables {
-    public static void main(String[] args) {
+  public static void main(String[] args) {
         String name = "John";
         int age = 25;
         boolean isStudent = true;
-        
-        System.out.println(name);
-        System.out.println(age);
-    }
-}`
+
+    System.out.println(name);
+    System.out.println(age);
+  }
+} `
 };
 
 // Sample generated code for Level 2
@@ -148,59 +148,61 @@ const CodeResult = () => {
   const { levelId } = useParams<{ levelId: string }>();
   const navigate = useNavigate();
   const { gameState } = useGame();
-  
+
   const [showCelebration, setShowCelebration] = useState(true);
-  
+
   const currentLevel = gameState.levels.find(level => level.id === Number(levelId));
   const code = generatedCode[Number(levelId) as keyof typeof generatedCode];
   const levelExplanations = explanations[Number(levelId) as keyof typeof explanations];
-  
+
   useEffect(() => {
     // Hide celebration after 3 seconds
     const timer = setTimeout(() => {
       setShowCelebration(false);
     }, 3000);
-    
+
     return () => clearTimeout(timer);
   }, []);
-  
+
   if (!currentLevel || !code || !levelExplanations) {
     return (
-      <div className="min-h-screen bg-puzzle-light">
+      <div className="min-h-[100dvh] bg-puzzle-light">
         <NavBar />
-        <div className="max-w-4xl mx-auto px-4 py-8 text-center">
+        <div className="min-h-[100dvh] flex flex-col items-center justify-center p-4 text-center bg-background" style={{ paddingTop: 'calc(var(--safe-area-top) + 4.5rem)' }}>
+          <MobileHeader title="Not Found" showBack />
           <h1 className="text-2xl font-bold mb-4">Level Not Found</h1>
           <Button onClick={() => navigate('/levels')}>Back to Level Map</Button>
         </div>
       </div>
     );
   }
-  
+
   const handleNextLevel = () => {
     const nextLevelId = currentLevel.id + 1;
     const nextLevel = gameState.levels.find(level => level.id === nextLevelId);
-    
+
     if (nextLevel && nextLevel.isUnlocked) {
       navigate(`/puzzle/${nextLevelId}`);
     } else {
       navigate('/levels');
     }
   };
-  
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-puzzle-light via-white to-puzzle-purple/5">
+    <div className="min-h-[100dvh] bg-gradient-to-br from-puzzle-light via-white to-puzzle-purple/5">
       <NavBar />
-      
+      <MobileHeader title={`Level ${levelId} Done!`} showBack />
+
       <LevelCompleteModal show={showCelebration} xpReward={currentLevel.xpReward} />
-      
-      <div className="max-w-4xl mx-auto px-4 py-6">
+
+      <div className="max-w-4xl mx-auto px-4 py-6" style={{ paddingTop: 'calc(var(--safe-area-top) + 4.5rem)' }}>
         <CodeResultHeader currentLevel={currentLevel} onNextLevel={handleNextLevel} />
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             <GeneratedCode code={code} levelInfo={currentLevel} />
           </div>
-          
+
           <div>
             <CodeExplanation explanations={levelExplanations} onNextLevel={handleNextLevel} />
           </div>

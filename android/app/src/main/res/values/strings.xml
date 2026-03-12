@@ -2,7 +2,8 @@
 <resources>
     <string name="app_name">Codio</string>
     <string name="title_activity_main">Codio</string>
-    <string name="package_name">com.codio.app</string>
-    <string name="custom_url_scheme">com.codio.app</string>
-    <string name="google_client_id">951939133229-etgc0s5sr5ssl9g4d3goikcn97ontdkc.apps.googleusercontent.com</string>
+    <string name="package_name">web.codezen</string>
+    <string name="custom_url_scheme">web.codezen</string>
+    <string name="google_client_id">951939133229-v93l8g236k2lb0mvr95ju7b8beg9h898.apps.googleusercontent.com</string>
+    <string name="server_client_id">951939133229-etgc0s5sr5ssl9g4d3goikcn97ontdkc.apps.googleusercontent.com</string>
 </resources>

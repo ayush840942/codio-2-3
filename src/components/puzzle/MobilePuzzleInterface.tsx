@@ -74,7 +74,7 @@ const MobilePuzzleInterface: React.FC<MobilePuzzleInterfaceProps> = ({
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
-  return <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex flex-col overflow-hidden">
+  return <div className="min-h-[100dvh] bg-gradient-to-br from-purple-50 via-white to-blue-50 flex flex-col overflow-hidden">
     {/* Mobile Header */}
 
 

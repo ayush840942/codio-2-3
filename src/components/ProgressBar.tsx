@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useGame } from '@/context/GameContext';
+import { useRewards } from '@/context/RewardsContext';
 
 type ProgressBarProps = {
   showXp?: boolean;
@@ -9,7 +10,8 @@ type ProgressBarProps = {
 
 const ProgressBar = ({ showXp = true, className = '' }: ProgressBarProps) => {
   const { gameState } = useGame();
-  
+  const { rewards } = useRewards();
+
   // Calculate completion percentage
   const totalLevels = gameState.levels.length;
   const completedLevels = gameState.levels.filter(level => level.isCompleted).length;
@@ -23,12 +25,12 @@ const ProgressBar = ({ showXp = true, className = '' }: ProgressBarProps) => {
         </span>
         {showXp && (
           <span className="text-sm font-medium text-puzzle-purple">
-            {gameState.xp} XP
+            {rewards?.xp || 0} XP
           </span>
         )}
       </div>
       <div className="w-full h-3 bg-puzzle-purple/10 rounded-full overflow-hidden">
-        <div 
+        <div
           className="h-full bg-gradient-to-r from-puzzle-purple to-puzzle-blue rounded-full transition-all duration-500"
           style={{ width: `${progressPercentage}%` }}
         ></div>

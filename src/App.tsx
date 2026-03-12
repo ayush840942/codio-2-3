@@ -12,11 +12,16 @@ import { DailyGoalsProvider } from "@/context/DailyGoalsContext";
 import { AchievementsProvider } from "@/context/AchievementsContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import MobileOptimizedLayout from "@/components/MobileOptimizedLayout";
-import GameLoadingScreen from "@/components/loading/GameLoadingScreen";
+import AppLoadingScreen from "@/components/loading/AppLoadingScreen";
 import PushNotificationHandler from "@/components/notifications/PushNotificationHandler";
+import { BackgroundMusic } from "@/components/audio/BackgroundMusic";
 import { App as CapacitorApp } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
+import { SplashScreen } from '@capacitor/splash-screen';
+import { StatusBar, Style } from '@capacitor/status-bar';
 import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
+import Daily from "./pages/Daily";
 import Puzzle from "./pages/Puzzle";
 import LevelMap from "./pages/LevelMap";
 import Auth from "./pages/Auth";
@@ -31,82 +36,68 @@ import Referrals from "./pages/Referrals";
 import Mastery from "./pages/Mastery";
 import Memo from "./pages/Memo";
 import Playground from "./pages/Playground";
+import CodeBuilder from "./pages/CodeBuilder";
+import AdminPanel from "./pages/AdminPanel";
+import AdminLogin from "./pages/AdminLogin";
 import Leaderboard from "./pages/Leaderboard";
 import Onboarding from "./pages/Onboarding";
 import OnboardingRedirect from "@/components/OnboardingRedirect";
+import Leagues from "./pages/Leagues";
 import NotFound from "./pages/NotFound";
+import PortfolioHub from "./pages/PortfolioHub";
+import ProjectPlayer from "./pages/ProjectPlayer";
+import CareerHub from "./pages/CareerHub";
+import PublicProfile from "./pages/PublicProfile";
 import './App.css';
 import { useState, useEffect } from "react";
 import { useAndroidOptimizations } from "@/hooks/useAndroidOptimizations";
+import { AIMentorButton } from "@/components/ai/AIMentorPanel";
 
 const queryClient = new QueryClient();
 
 function AppContent() {
   const { initializing } = useAuth();
-  const [showSplash, setShowSplash] = useState(true);
-
   // Initialize Android optimizations
   const { isNative } = useAndroidOptimizations();
 
   useEffect(() => {
-    // Add Android-specific classes
+    // Initialize sound effects on first user interaction to satisfy browser policies
+    const initAudio = async () => {
+      const { soundEffects } = await import('@/utils/soundEffects');
+      await soundEffects.init();
+      document.removeEventListener('click', initAudio);
+      document.removeEventListener('touchstart', initAudio);
+    };
+
+    document.addEventListener('click', initAudio);
+    document.addEventListener('touchstart', initAudio);
+
+    // Initialize native-specific features
     if (isNative()) {
       document.body.classList.add('capacitor-app');
-    }
 
-    // Initialize Google Auth for native platforms early
-    if (isNative()) {
+      // 1. Immersive Edge-to-Edge System Bars
+      StatusBar.setOverlaysWebView({ overlay: true }).catch(err => console.error('StatusBar overlay error:', err));
+      StatusBar.setStyle({ style: Style.Light }).catch(err => console.error('StatusBar style error:', err));
+
+      // 2. Google Auth Global Initialization
+      // We initialize for ALL platforms to ensure the bridge is ready and tokens work correctly.
+      console.log('Initializing GoogleAuth (universal)...');
       GoogleAuth.initialize({
         clientId: '951939133229-etgc0s5sr5ssl9g4d3goikcn97ontdkc.apps.googleusercontent.com',
         scopes: ['profile', 'email'],
-        grantOfflineAccess: true
-      }).catch(err => console.error('Google Auth global init error:', err));
+        grantOfflineAccess: true,
+      }).catch(err => console.error('Google Auth init error:', err));
     }
 
-    // Show splash screen for minimum 2 seconds
-    const timer = setTimeout(() => {
-      setShowSplash(false);
-    }, 2000);
-
-    // Listen for deep links (Supabase Auth Callback)
+    // Listen for deep links (Firebase handles its own, so we only use this for custom app logic)
     CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
       console.log('App URL Open:', url);
-      // Handle Supabase OAuth callback
-      // Expected URL: app.lovable.d5f1b9ecc305468bbb34bfdc9b510b2a://login-callback?code=...
-      if (url.includes('code=') || url.includes('access_token=') || url.includes('refresh_token=')) {
-        try {
-          // Extract the search parameters (query string)
-          const urlObj = new URL(url);
-          const params = new URLSearchParams(urlObj.search); // ?code=...
-          const code = params.get('code');
-
-          if (code) {
-            console.log('Detected auth code, exchanging for session...');
-            const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-            if (error) {
-              console.error('Error exchanging code for session:', error);
-            } else {
-              console.log('Session established successfully:', data.session?.user?.email);
-              // Force a faster redirect/refresh if needed, but context should pick it up
-            }
-          } else if (url.includes('#')) {
-            // Determine if it is implicit flow (fragment) - standard Supabase hash handling
-            const { data, error } = await supabase.auth.getSession();
-            if (error) {
-              console.error('Error getting session from URL fragment:', error);
-            }
-          }
-        } catch (e) {
-          console.error('Error processing deep link:', e);
-        }
-      }
     });
-
-    return () => clearTimeout(timer);
   }, [isNative]);
 
-  if (showSplash || initializing) {
-    return <GameLoadingScreen message={initializing ? "Initializing..." : "Codio"} />;
+  if (initializing) {
+    return <AppLoadingScreen message="Initializing Codio..." />;
   }
 
   return (
@@ -118,6 +109,11 @@ function AppContent() {
           <Route index element={
             <ProtectedRoute allowGuest={true} feature="the home page">
               <Index />
+            </ProtectedRoute>
+          } />
+          <Route path="daily" element={
+            <ProtectedRoute allowGuest={true} feature="daily challenges">
+              <Daily />
             </ProtectedRoute>
           } />
           <Route path="levels" element={
@@ -140,9 +136,35 @@ function AppContent() {
               <Leaderboard />
             </ProtectedRoute>
           } />
+          <Route path="leagues" element={
+            <ProtectedRoute allowGuest={true} feature="leagues">
+              <Leagues />
+            </ProtectedRoute>
+          } />
           <Route path="hints" element={
             <ProtectedRoute feature="the hint store">
               <HintStore />
+            </ProtectedRoute>
+          } />
+          <Route path="portfolio" element={
+            <ProtectedRoute allowGuest={true} feature="portfolio projects">
+              <PortfolioHub />
+            </ProtectedRoute>
+          } />
+          <Route path="career" element={
+            <ProtectedRoute allowGuest={true} feature="career hub">
+              <CareerHub />
+            </ProtectedRoute>
+          } />
+          <Route path="public-profile-preview" element={
+            <ProtectedRoute feature="public profile">
+              <PublicProfile />
+            </ProtectedRoute>
+          } />
+          <Route path="p/:id" element={<PublicProfile />} />
+          <Route path="project/:id" element={
+            <ProtectedRoute allowGuest={true} feature="project builder">
+              <ProjectPlayer />
             </ProtectedRoute>
           } />
           <Route path="build" element={
@@ -156,7 +178,7 @@ function AppContent() {
             </ProtectedRoute>
           } />
           <Route path="mastery" element={
-            <ProtectedRoute feature="mastery">
+            <ProtectedRoute allowGuest={true} feature="mastery">
               <Mastery />
             </ProtectedRoute>
           } />
@@ -168,6 +190,11 @@ function AppContent() {
           <Route path="playground" element={
             <ProtectedRoute feature="playground" featureKey="playground">
               <Playground />
+            </ProtectedRoute>
+          } />
+          <Route path="code-builder" element={
+            <ProtectedRoute feature="codeBuilder" featureKey="codeBuilder">
+              <CodeBuilder />
             </ProtectedRoute>
           } />
           <Route path="subscription" element={
@@ -185,6 +212,12 @@ function AppContent() {
               <HelpPage />
             </ProtectedRoute>
           } />
+          <Route path="admin" element={
+            <ProtectedRoute>
+              <AdminPanel />
+            </ProtectedRoute>
+          } />
+          <Route path="admin-login" element={<AdminLogin />} />
           <Route path="code-result" element={
             <ProtectedRoute>
               <CodeResult />
@@ -193,6 +226,7 @@ function AppContent() {
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
+      <AIMentorButton />
     </BrowserRouter>
   );
 }
@@ -201,8 +235,8 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <GameProvider>
-          <RewardsProvider>
+        <RewardsProvider>
+          <GameProvider>
             <HeartsProvider>
               <StreakProvider>
                 <DailyGoalsProvider>
@@ -210,14 +244,15 @@ function App() {
                     <TooltipProvider>
                       <Toaster />
                       <PushNotificationHandler />
+                      <BackgroundMusic />
                       <AppContent />
                     </TooltipProvider>
                   </AchievementsProvider>
                 </DailyGoalsProvider>
               </StreakProvider>
             </HeartsProvider>
-          </RewardsProvider>
-        </GameProvider>
+          </GameProvider>
+        </RewardsProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

@@ -18,6 +18,7 @@ type SecureSubscriptionMetadata = {
 
 export const useSecureSubscription = (user: User | null) => {
   const [loading, setLoading] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const navigate = useNavigate();
   const { refreshSubscription } = useAuth();
   const { refreshRewards } = useRewards();
@@ -46,9 +47,9 @@ export const useSecureSubscription = (user: User | null) => {
       return 0;
     }
 
-    // Verify email for purchases over ₹1000
-    if (plan.price > 1000) {
-      const canProceed = await requireEmailVerification('make purchases over ₹1000');
+    // Verify email for purchases over $50
+    if (plan.price > 50) {
+      const canProceed = await requireEmailVerification('make purchases over $50');
       if (!canProceed) {
         return 0;
       }
@@ -56,42 +57,51 @@ export const useSecureSubscription = (user: User | null) => {
 
     console.log('Starting secure subscription process for plan:', plan.id, 'user:', user.email);
     setLoading(plan.id);
+    setIsProcessing(true);
     playPaymentProcessing();
 
     try {
-      const amountInPaise = plan.price * 100;
-      console.log('Amount in paise:', amountInPaise);
+      // Universal USD Pricing Logic
+      const currency = 'USD';
+      const amount = plan.price; // Use the plan price directly
+      const amountInSubunits = Math.round(amount * 100);
+
+      console.log(`Using universal USD Pricing: ${amount} ${currency}`);
+
+      console.log(`Detected region currency: ${currency}, final amount: ${amount}`);
 
       // Log security event for purchase attempt
       await logSecurityEvent('purchase_attempt', {
         plan_id: plan.id,
-        amount: amountInPaise,
+        amount: amountInSubunits,
+        currency,
         metadata
       });
 
-      // Generate order ID with enhanced security
-      const orderData = await secureGenerateOrderId(amountInPaise, user, metadata);
+      // Generate order ID with dynamic currency
+      const orderData = await secureGenerateOrderId(amountInSubunits, user, metadata, currency);
       console.log('Secure order created with data:', orderData);
 
-      // Create payment with enhanced security
+      // Create payment with enhanced security and dynamic currency
       const response = await processPayment({
         key: orderData.key_id,
-        amount: amountInPaise,
-        currency: "INR",
-        name: "CodeZen",
+        amount: amountInSubunits,
+        currency: currency,
+        name: "Codio",
         description: `${plan.name} - ${metadata?.type === 'hint-purchase' ? 'Hint Points' : 'Premium Subscription'}`,
         order_id: orderData.order_id,
         handler: async function () { }, // Will be overridden
         prefill: {
-          name: user.email?.split('@')[0] || 'User',
+          name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Doodle Master',
           email: user.email || undefined,
+          contact: user.phone || '9111111111' // Defaulting to a generic 10-digit number if missing
         },
         theme: {
-          color: '#8b5cf6',
+          color: '#FFD93D', // Yellow to match Comic Theme
         },
         modal: {
-          escape: false, // Prevent accidental closure
-          backdrop: false
+          escape: true,
+          backdrop: true
         }
       });
 
@@ -100,10 +110,17 @@ export const useSecureSubscription = (user: User | null) => {
       // Log successful payment
       await logSecurityEvent('payment_success', {
         plan_id: plan.id,
-        amount: amountInPaise,
+        amount: amountInSubunits,
         payment_id: response.razorpay_payment_id,
         order_id: response.razorpay_order_id
       });
+
+      // Play victory sound early for immediate feedback
+      if (metadata?.type === 'hint-purchase') {
+        playHintPurchased();
+      } else {
+        playSubscriptionActivated();
+      }
 
       console.log('Recording purchase in database...');
       // Record the purchase/subscription with enhanced security
@@ -117,7 +134,12 @@ export const useSecureSubscription = (user: User | null) => {
       );
 
       console.log('Refreshing application state...');
-      // Refresh state immediately to activate features/hints
+      // Update local storage for immediate offline access
+      if (metadata?.type !== 'hint-purchase') {
+        localStorage.setItem('codio_premium', 'true');
+        localStorage.setItem('codio_subscription_plan', plan.id || 'premium');
+      }
+
       // We use a small delay to allow database replication/triggers if necessary
       await new Promise(resolve => setTimeout(resolve, 500));
       await Promise.all([
@@ -125,8 +147,10 @@ export const useSecureSubscription = (user: User | null) => {
         refreshRewards()
       ]);
 
+      // Play success celebration
+      playPurchaseSuccess();
+
       if (metadata?.type === 'hint-purchase' && metadata.hintAmount) {
-        playHintPurchased();
         toast.success("Hints Purchased Successfully!", {
           description: `Successfully added ${metadata.hintAmount} hint points. Balance refreshed!`
         });
@@ -154,15 +178,16 @@ export const useSecureSubscription = (user: User | null) => {
         toast.error("Transaction Failed", {
           description: errorMessage.includes('Payment server returned invalid response')
             ? "Payment service temporarily unavailable. Please try again in a few moments."
-            : "Failed to process transaction. Please try again or contact support if the issue persists."
+            : errorMessage // Use the real error message here for better debugging
         });
       }
 
       return 0;
     } finally {
       setLoading(null);
+      setIsProcessing(false);
     }
   };
 
-  return { loading, handleSubscribe };
+  return { loading, isProcessing, handleSubscribe };
 };

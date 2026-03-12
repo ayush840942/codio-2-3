@@ -6,10 +6,21 @@ import React, {
   useCallback
 } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useRewards } from '@/context/RewardsContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { toDatabaseId } from '@/utils/idMapping';
 import { useSubscriptionFeatures } from '@/hooks/useSubscriptionFeatures';
 import { PuzzleLevel } from '@/types/game';
+import { initialLevels as levelSourceData } from '@/data/gameLevels';
+import { registerPlugin } from '@capacitor/core';
+import { getLevelConfig } from '@/utils/levelManifest';
+
+interface InAppReviewPlugin {
+  triggerReview(): Promise<void>;
+}
+
+const InAppReview = registerPlugin<InAppReviewPlugin>('InAppReview');
 
 // Re-export PuzzleLevel for backward compatibility
 export type { PuzzleLevel } from '@/types/game';
@@ -17,7 +28,6 @@ export type { PuzzleLevel } from '@/types/game';
 type GameContextType = {
   gameState: {
     levels: PuzzleLevel[];
-    xp: number;
     subscription: {
       active: boolean;
       tier: string | null;
@@ -27,7 +37,7 @@ type GameContextType = {
   resetProgress: () => Promise<void>;
   syncWithDatabase: () => Promise<void>;
   canAccessLevel: (levelId: number) => boolean;
-  updateXP: (newXP: number) => void;
+  updateXP?: (newXP: number) => void; // Deprecated - use rewards.addXP instead
   isTrialUser: boolean;
   trialDaysRemaining: number;
   isLoaded: boolean;
@@ -45,14 +55,12 @@ const calculateTrialDaysRemaining = (startDate: string): number => {
 export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [gameState, setGameState] = useState<{
     levels: PuzzleLevel[];
-    xp: number;
     subscription: {
       active: boolean;
       tier: string | null;
     };
   }>({
     levels: [],
-    xp: 0,
     subscription: {
       active: false,
       tier: null
@@ -62,6 +70,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [trialDaysRemaining, setTrialDaysRemaining] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
   const { user } = useAuth();
+  const { addXP } = useRewards();
   const { isSubscribed, canAccessLevel: subscriptionCanAccessLevel, getMaxLevels } = useSubscriptionFeatures();
 
   useEffect(() => {
@@ -89,26 +98,18 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
           // Initial UI update from cache
           if (dbLevels.length > 0 || subscriptionData) {
-            const cachedInitialLevels = Array.from({ length: 200 }, (_, i) => {
-              const levelId = i + 1;
-              const cachedLevel = dbLevels?.find(level => level.level_id === levelId || level.levelId === levelId);
+            const cachedInitialLevels = levelSourceData.map(level => {
+              const cachedLevel = dbLevels?.find(l => l.level_id === level.id || l.levelId === level.id);
               return {
-                id: levelId,
-                title: `Level ${levelId}`,
-                description: `Coding Challenge Level ${levelId}`,
-                topic: levelId <= 10 ? 'HTML' : levelId <= 20 ? 'CSS' : levelId <= 40 ? 'JavaScript' : levelId <= 60 ? 'React' : levelId <= 75 ? 'OOP' : levelId <= 90 ? 'Database' : 'Advanced',
-                difficulty: 'easy' as const,
-                puzzleType: 'drag-drop' as const,
-                xpReward: 10,
+                ...level,
                 isCompleted: cachedLevel?.is_completed ?? cachedLevel?.isCompleted ?? false,
-                isUnlocked: (cachedLevel?.is_unlocked ?? cachedLevel?.isUnlocked) || levelId === 1,
+                isUnlocked: (cachedLevel?.is_unlocked ?? cachedLevel?.isUnlocked) || level.id === 1,
                 attempts: cachedLevel?.attempts || 0
               };
             });
 
             setGameState({
               levels: cachedInitialLevels,
-              xp: cachedInitialLevels.filter(l => l.isCompleted).reduce((sum, l) => sum + l.xpReward, 0),
               subscription: {
                 active: !!subscriptionData,
                 tier: subscriptionData?.plan_id || null
@@ -119,10 +120,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // 2. Try fetching from Supabase if online
           if (!isGuest) {
             try {
+              const dbUserId = toDatabaseId(user.id);
               const { data: remoteLevels, error: levelsError } = await supabase
                 .from('user_levels')
                 .select('*')
-                .eq('user_id', user.id);
+                .eq('user_id', dbUserId);
 
               if (!levelsError && remoteLevels) {
                 dbLevels = remoteLevels;
@@ -133,7 +135,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
               const { data: subData, error: subscriptionError } = await supabase
                 .from('user_subscriptions')
                 .select('*')
-                .eq('user_id', user.id)
+                .eq('user_id', dbUserId)
                 .eq('status', 'active')
                 .single();
 
@@ -146,7 +148,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
               const { data: profData, error: profileError } = await supabase
                 .from('profiles')
                 .select('trial_start_date')
-                .eq('id', user.id)
+                .eq('id', dbUserId)
                 .single();
 
               if (!profileError) profileData = profData;
@@ -157,19 +159,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
 
           // Final update with the most fresh data available (DB or Cache)
-          const finalLevels = Array.from({ length: 200 }, (_, i) => {
-            const levelId = i + 1;
-            const dbLevel = dbLevels?.find(level => level.level_id === levelId || level.levelId === levelId);
+          const finalLevels = levelSourceData.map(level => {
+            const dbLevel = dbLevels?.find(l => l.level_id === level.id || l.levelId === level.id);
+
             return {
-              id: levelId,
-              title: `Level ${levelId}`,
-              description: `Coding Challenge Level ${levelId}`,
-              topic: levelId <= 10 ? 'HTML' : levelId <= 20 ? 'CSS' : levelId <= 40 ? 'JavaScript' : levelId <= 60 ? 'React' : levelId <= 75 ? 'OOP' : levelId <= 90 ? 'Database' : 'Advanced',
-              difficulty: 'easy' as const,
-              puzzleType: 'drag-drop' as const,
-              xpReward: 10,
+              ...level,
               isCompleted: dbLevel?.is_completed ?? dbLevel?.isCompleted ?? false,
-              isUnlocked: (dbLevel?.is_unlocked ?? dbLevel?.isUnlocked) || levelId === 1,
+              isUnlocked: (dbLevel?.is_unlocked ?? dbLevel?.isUnlocked) || level.id === 1,
               attempts: dbLevel?.attempts || 0
             };
           });
@@ -183,34 +179,28 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
           setGameState({
             levels: finalLevels,
-            xp: finalLevels.filter(l => l.isCompleted).reduce((sum, l) => sum + l.xpReward, 0),
             subscription: {
               active: !!subscriptionData,
               tier: subscriptionData?.plan_id || null
             }
           });
 
+          setIsLoaded(true);
         } catch (error) {
           console.error('Initialization error:', error);
+          setIsLoaded(true); // Still set loaded to true to avoid stuck UI
         }
       } else {
         // Default state for no user
-        const defaultLevels = Array.from({ length: 200 }, (_, i) => ({
-          id: i + 1,
-          title: `Level ${i + 1}`,
-          description: `Coding Challenge Level ${i + 1}`,
-          topic: (i + 1) <= 10 ? 'HTML' : (i + 1) <= 20 ? 'CSS' : (i + 1) <= 40 ? 'JavaScript' : (i + 1) <= 60 ? 'React' : (i + 1) <= 75 ? 'OOP' : (i + 1) <= 90 ? 'Database' : 'Advanced',
-          difficulty: 'easy' as const,
-          puzzleType: 'drag-drop' as const,
-          xpReward: 10,
+        const defaultLevels = levelSourceData.map((level, index) => ({
+          ...level,
           isCompleted: false,
-          isUnlocked: i === 0,
+          isUnlocked: index === 0,
           attempts: 0
         }));
 
         setGameState({
           levels: defaultLevels,
-          xp: 0,
           subscription: { active: false, tier: null }
         });
         setIsTrialUser(false);
@@ -221,6 +211,69 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initializeGame();
   }, [user]);
+
+  // Real-time Level Progress Subscription
+  useEffect(() => {
+    if (!user) return;
+
+    const dbId = toDatabaseId(user.id);
+    console.log('Setting up real-time level progress listener for:', dbId);
+
+    const levelsSubscription = supabase
+      .channel(`levels_realtime_${dbId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_levels',
+          filter: `user_id=eq.${dbId}`
+        },
+        (payload: any) => {
+          console.log('Real-time level update received:', payload);
+          if (payload.new) {
+            const updatedLevel = payload.new;
+
+            setGameState(prevState => ({
+              ...prevState,
+              levels: prevState.levels.map(level => {
+                if (level.id === updatedLevel.level_id) {
+                  return {
+                    ...level,
+                    isCompleted: updatedLevel.is_completed,
+                    isUnlocked: updatedLevel.is_unlocked,
+                    attempts: updatedLevel.attempts
+                  };
+                }
+                // Also handle the next level becoming unlocked if previous was completed
+                if (updatedLevel.is_completed && level.id === updatedLevel.level_id + 1) {
+                  return { ...level, isUnlocked: true };
+                }
+                return level;
+              })
+            }));
+
+            // Update cache
+            const cacheKey = `codio_levels_cache_${user.id}`;
+            const cached = localStorage.getItem(cacheKey);
+            let levels = cached ? JSON.parse(cached) : [];
+            const idx = levels.findIndex((l: any) => l.level_id === updatedLevel.level_id);
+            if (idx >= 0) {
+              levels[idx] = updatedLevel;
+            } else {
+              levels.push(updatedLevel);
+            }
+            localStorage.setItem(cacheKey, JSON.stringify(levels));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('Cleaning up levels listener');
+      supabase.removeChannel(levelsSubscription);
+    };
+  }, [user?.id]);
 
   const canAccessLevel = useCallback((levelId: number): boolean => {
     console.log(`Checking access for level ${levelId}`);
@@ -278,11 +331,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Sync to Supabase if not a guest
       if (!isGuest) {
+        const dbUserId = toDatabaseId(user.id);
         const { error } = await supabase
           .from('user_levels')
           .upsert(
             {
-              user_id: user.id,
+              user_id: dbUserId,
               ...levelData
             },
             { onConflict: 'user_id,level_id' }
@@ -310,13 +364,17 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           level.id === levelId
             ? { ...level, isCompleted: true, attempts }
             : level
-        ),
-        xp: prevState.xp + (level?.isCompleted ? 0 : xpGained) // Only add XP if not already completed
+        )
       }));
 
       // Update database
       if (user) {
         await updateUserProgress(levelId, true, 0, attempts);
+
+        // Add XP to rewards (only if not already completed)
+        if (!level?.isCompleted && xpGained > 0) {
+          await addXP(xpGained);
+        }
 
         // Unlock next level
         const nextLevelId = levelId + 1;
@@ -335,6 +393,21 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       toast.success(`🎉 Level ${levelId} completed!`);
+
+      // In-App Review Logic
+      const completedCountKey = 'codio_completed_levels_count';
+      const lastCount = parseInt(localStorage.getItem(completedCountKey) || '0', 10);
+      const newCount = lastCount + 1;
+      localStorage.setItem(completedCountKey, newCount.toString());
+
+      if (newCount === 3) {
+        console.log('Triggering In-App Review after 3 levels');
+        try {
+          await InAppReview.triggerReview();
+        } catch (e) {
+          console.error('Failed to trigger in-app review:', e);
+        }
+      }
     } catch (error) {
       console.error('Error completing level:', error);
       toast.error('Failed to save progress');
@@ -349,10 +422,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       // Reset levels in the database
+      const dbUserId = toDatabaseId(user.id);
       const { error } = await supabase
         .from('user_levels')
         .delete()
-        .eq('user_id', user.id);
+        .eq('user_id', dbUserId);
 
       if (error) {
         console.error('Error resetting user levels:', error);
@@ -367,8 +441,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           isCompleted: false,
           attempts: 0,
           isUnlocked: index === 0 // Only first level is unlocked
-        })),
-        xp: 0
+        }))
       }));
 
       toast.success('Progress reset successfully!');
@@ -400,10 +473,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [user, gameState.levels]);
 
   const updateXP = useCallback((newXP: number) => {
-    setGameState(prevState => ({
-      ...prevState,
-      xp: newXP
-    }));
+    console.warn('updateXP is deprecated. Use rewards.addXP() instead.');
+    // No-op - XP is now managed by RewardsContext
   }, []);
 
   const value = {

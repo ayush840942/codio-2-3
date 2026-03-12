@@ -3,16 +3,16 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Trophy, Target, Zap, Calendar } from 'lucide-react';
 import { useGame } from '@/context/GameContext';
+import { useRewards } from '@/context/RewardsContext';
 
 const MimoStyleStats: React.FC = () => {
   const { gameState } = useGame();
-  
+  const { rewards } = useRewards();
+
   const totalLevels = gameState.levels.length;
   const completedLevels = gameState.levels.filter(l => l.isCompleted).length;
-  const totalXP = gameState.levels
-    .filter(l => l.isCompleted)
-    .reduce((sum, l) => sum + (l.xpReward || 0), 0);
-  
+  const totalXP = rewards.xp;
+
   const progressPercentage = totalLevels > 0 ? (completedLevels / totalLevels) * 100 : 0;
 
   const stats = [

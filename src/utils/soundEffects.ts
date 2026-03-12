@@ -5,9 +5,22 @@ class SoundEffects {
 
   constructor() {
     this.initializeAudioContext();
+    this.updateSoundState();
+    // Listen for storage changes to update sound state in real-time
+    window.addEventListener('storage', () => this.updateSoundState());
+  }
+
+  private updateSoundState() {
+    this.soundEnabled = localStorage.getItem('settings_sound') !== 'false';
+  }
+
+  public async init() {
+    await this.ensureAudioContext();
+    console.log('Sound effects engine initialized');
   }
 
   private initializeAudioContext() {
+    if (this.audioContext) return;
     try {
       this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     } catch (error) {
@@ -20,7 +33,7 @@ class SoundEffects {
       this.initializeAudioContext();
     }
 
-    if (this.audioContext && this.audioContext.state === 'suspended') {
+    if (this.audioContext && (this.audioContext.state === 'suspended' || this.audioContext.state === 'interrupted')) {
       try {
         await this.audioContext.resume();
       } catch (error) {
@@ -59,10 +72,43 @@ class SoundEffects {
     });
   }
 
+  async playCartoonSuccess() {
+    if (!this.soundEnabled) return;
+    await this.ensureAudioContext();
+    try {
+      // High-quality local celebration sound (downloaded locally for offline)
+      const audioPath = new URL('/sounds/magic_celebration.mp3', window.location.origin).href;
+      const audio = new Audio(audioPath);
+      audio.volume = 0.5;
+      await audio.play();
+
+      // Also play the cute "Yay" voice with a slight delay
+      setTimeout(() => this.playBabyCelebration(), 200);
+    } catch (error) {
+      console.warn('Error playing cartoon success sound:', error);
+      this.levelComplete();
+    }
+  }
+
+  async playBabyCelebration() {
+    if (!this.soundEnabled) return;
+    await this.ensureAudioContext();
+    try {
+      // High-quality cute girl "Great Job!" (ElevenLabs Jessica)
+      // Ensure path is absolute for Capacitor WebView
+      const audioPath = new URL('/sounds/level_success_voice.mp3', window.location.origin).href;
+      const audio = new Audio(audioPath);
+      audio.volume = 0.8;
+      await audio.play();
+    } catch (error) {
+      console.warn('Error playing baby celebration sound:', error);
+    }
+  }
+
   async blockClick() {
     await this.ensureAudioContext();
     // Sweet, gentle click sound
-    this.createTone(880, 0.08, 'sine', 0.08);
+    this.createTone(880, 0.08, 'sine', 0.1);
   }
 
   async blockPlace() {
@@ -70,7 +116,7 @@ class SoundEffects {
     // Magical placement sound
     const placeSound = [
       { frequency: 523, duration: 0.1, delay: 0 },
-      { frequency:659, duration: 0.12, delay: 50 }
+      { frequency: 659, duration: 0.12, delay: 50 }
     ];
     this.playMelody(placeSound);
   }

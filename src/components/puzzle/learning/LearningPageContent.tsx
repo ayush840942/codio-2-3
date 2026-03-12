@@ -1,40 +1,37 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { BookOpen, Code, Target, Lightbulb } from 'lucide-react';
+import { DrawnCard } from '@/components/ui/HandDrawnComponents';
+import { BookOpen, Code, Target, Lightbulb, Star, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { LearningPage } from '@/data/learning/types';
 import InteractiveCodeExample from './InteractiveCodeExample';
+import InteractiveLearningSlide from './InteractiveLearningSlide';
 
 interface LearningPageContentProps {
   page: LearningPage;
+  onInteractionComplete?: (isCorrect: boolean) => void;
 }
 
-const LearningPageContent: React.FC<LearningPageContentProps> = ({ page }) => {
+const LearningPageContent: React.FC<LearningPageContentProps> = ({ page, onInteractionComplete }) => {
   const getPageIcon = (type?: string) => {
+    const props = { className: "w-8 h-8 text-black", strokeWidth: 3 };
     switch (type) {
-      case 'concept':
-        return <BookOpen className="w-5 h-5 text-blue-600" />;
-      case 'example':
-        return <Code className="w-5 h-5 text-green-600" />;
-      case 'practice':
-        return <Target className="w-5 h-5 text-purple-600" />;
-      default:
-        return <Lightbulb className="w-5 h-5 text-yellow-600" />;
+      case 'concept': return <BookOpen {...props} />;
+      case 'example': return <Code {...props} />;
+      case 'practice': return <Target {...props} />;
+      case 'interactive': return <Zap className="w-8 h-8 text-black" strokeWidth={3} />;
+      default: return <Lightbulb {...props} />;
     }
   };
 
   const getPageColor = (type?: string) => {
     switch (type) {
-      case 'concept':
-        return 'bg-blue-100 text-blue-700';
-      case 'example':
-        return 'bg-green-100 text-green-700';
-      case 'practice':
-        return 'bg-purple-100 text-purple-700';
-      default:
-        return 'bg-yellow-100 text-yellow-700';
+      case 'concept': return 'bg-pastel-blue';
+      case 'example': return 'bg-pastel-mint';
+      case 'practice': return 'bg-pastel-lavender';
+      case 'interactive': return 'bg-pastel-yellow';
+      default: return 'bg-pastel-yellow';
     }
   };
 
@@ -43,85 +40,114 @@ const LearningPageContent: React.FC<LearningPageContentProps> = ({ page }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="space-y-6"
+      className="space-y-6 font-draw"
     >
       {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          {getPageIcon(page.type)}
-          <h2 className="text-2xl font-bold text-gray-800">{page.title}</h2>
+      <div className="flex items-center justify-between px-2">
+        <div className="flex items-center gap-4">
+          <div className={`p-3 border-3 border-black rounded-2xl shadow-comic-sm ${getPageColor(page.type)}`}>
+            {getPageIcon(page.type)}
+          </div>
+          <h2 className="text-3xl font-black text-black leading-tight">{page.title}</h2>
         </div>
-        {page.type && (
-          <Badge className={getPageColor(page.type)}>
-            {page.type.charAt(0).toUpperCase() + page.type.slice(1)}
-          </Badge>
-        )}
       </div>
 
+      {/* Interactive Learning Slide */}
+      {page.type === 'interactive' && (
+        <InteractiveLearningSlide
+          page={page}
+          onComplete={(correct) => onInteractionComplete?.(correct)}
+        />
+      )}
+
       {/* Page Content */}
-      <div className="prose prose-lg max-w-none">
-        <div className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+      <DrawnCard className="bg-white/80 p-6">
+        <div className="text-xl font-bold text-slate-800 leading-relaxed whitespace-pre-wrap">
           {page.content}
         </div>
-      </div>
+      </DrawnCard>
 
       {/* Interactive Code Example */}
       {page.codeExample && (
-        <Card className="bg-gray-50 border-2 border-gray-200">
-          <CardContent className="p-6">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Code className="w-5 h-5 text-blue-600" />
-              Interactive Example
-            </h3>
+        <DrawnCard className="bg-slate-900 border-black p-6">
+          <h3 className="text-xl font-black mb-4 flex items-center gap-2 text-white">
+            <Code className="w-6 h-6 text-pastel-blue" strokeWidth={3} />
+            LIVE EXAMPLE
+          </h3>
+          <div className="rounded-xl overflow-hidden border-2 border-slate-700">
             <InteractiveCodeExample
               code={page.codeExample}
-              title="Code Example"
-              expectedOutput="Click 'Run Code' to see the output"
+              title="Code Snippet"
+              expectedOutput="Check the output below!"
             />
-          </CardContent>
-        </Card>
+          </div>
+        </DrawnCard>
       )}
 
       {/* Key Points */}
       {page.keyPoints && page.keyPoints.length > 0 && (
-        <Card className="bg-blue-50 border-2 border-blue-200">
-          <CardContent className="p-6">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-blue-800">
-              <Lightbulb className="w-5 h-5" />
-              Key Points
-            </h3>
-            <ul className="space-y-2">
-              {page.keyPoints.map((point, index) => (
-                <li key={index} className="flex items-start gap-2">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                  <span className="text-blue-700">{point}</span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
+        <DrawnCard className="bg-pastel-yellow p-6">
+          <h3 className="text-2xl font-black mb-4 flex items-center gap-2 text-black">
+            <Lightbulb className="w-7 h-7" strokeWidth={3} />
+            KEY TIPS
+          </h3>
+          <ul className="space-y-3">
+            {page.keyPoints.map((point, index) => (
+              <li key={index} className="flex items-start gap-3">
+                <div className="w-3 h-3 bg-black rounded-full mt-2.5 flex-shrink-0"></div>
+                <span className="text-lg font-bold text-black/80 leading-snug">{point}</span>
+              </li>
+            ))}
+          </ul>
+        </DrawnCard>
+      )}
+
+      {/* Visual Example */}
+      {page.visualExample && (
+        <DrawnCard className="bg-cc-blue p-6 border-dashed">
+          <h3 className="text-xl font-black mb-3 flex items-center gap-2 text-black">
+            <Star className="w-6 h-6 fill-cc-yellow" strokeWidth={3} />
+            VISUAL MISSION
+          </h3>
+          <p className="text-lg font-bold text-black/70 italic">
+            {page.visualExample}
+          </p>
+        </DrawnCard>
+      )}
+
+      {/* Practice Hint */}
+      {page.practiceHint && (
+        <DrawnCard className="bg-cc-green p-6 border-dashed">
+          <h3 className="text-xl font-black mb-3 flex items-center gap-2 text-black">
+            <Zap className="w-6 h-6 fill-cc-yellow" strokeWidth={3} />
+            PRO TIP
+          </h3>
+          <p className="text-lg font-bold text-black/70 italic">
+            "{page.practiceHint}"
+          </p>
+        </DrawnCard>
       )}
 
       {/* Practice Exercise */}
       {page.exercise && (
-        <Card className="bg-purple-50 border-2 border-purple-200">
-          <CardContent className="p-6">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-purple-800">
-              <Target className="w-5 h-5" />
-              Practice Exercise
-            </h3>
-            <div className="space-y-4">
-              <p className="text-purple-700">{page.exercise.question}</p>
-              {page.exercise.starter && (
+        <DrawnCard className="bg-pastel-lavender p-6">
+          <h3 className="text-2xl font-black mb-4 flex items-center gap-2 text-black">
+            <Target className="w-7 h-7" strokeWidth={3} />
+            YOUR TURN
+          </h3>
+          <div className="space-y-4">
+            <p className="text-xl font-bold text-black/80">{page.exercise.question}</p>
+            {page.exercise.starter && (
+              <div className="rounded-xl overflow-hidden border-2 border-black/20">
                 <InteractiveCodeExample
                   code={page.exercise.starter}
-                  title="Practice Code"
-                  expectedOutput="Complete the exercise and run to see results"
+                  title="Try it out"
+                  expectedOutput="Run the code to verify!"
                 />
-              )}
-            </div>
-          </CardContent>
-        </Card>
+              </div>
+            )}
+          </div>
+        </DrawnCard>
       )}
     </motion.div>
   );

@@ -1,13 +1,23 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Copy, Share2, Gift, Users, Trophy, CheckCircle2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import {
+  ArrowLeft,
+  Copy,
+  Share2,
+  Gift,
+  Users,
+  Trophy,
+  CheckCircle2,
+  Sparkles,
+  Zap,
+  Star
+} from 'lucide-react';
+import { DrawnButton, DrawnCard, DrawnInput } from '@/components/ui/HandDrawnComponents';
 import { useReferralSystem } from '@/hooks/useReferralSystem';
 import { toast } from 'sonner';
 import Logo from '@/components/ui/logo';
+import MobileHeader from '@/components/MobileHeader';
 
 const Referrals = () => {
   const navigate = useNavigate();
@@ -20,15 +30,15 @@ const Referrals = () => {
   const handleCopy = () => {
     if (referralStats?.referralCode) {
       navigator.clipboard.writeText(`${PLAY_STORE_URL}&referral=${referralStats.referralCode}`);
-      toast.success('Link copied!');
+      toast.success('Link copied! Go share it!');
     }
   };
 
   const handleShare = async () => {
     if (referralStats?.referralCode) {
       const shareData = {
-        title: 'Join CodeZen',
-        text: `Learn coding with me! Use my code ${referralStats.referralCode} for bonus rewards 🎁`,
+        title: 'Join Codio!',
+        text: `Level up your coding skills with me! Use my code ${referralStats.referralCode} for EPIC rewards 🎁`,
         url: `${PLAY_STORE_URL}&referral=${referralStats.referralCode}`
       };
       if (navigator.share) {
@@ -38,143 +48,182 @@ const Referrals = () => {
   };
 
   const handleApplyCode = async () => {
-    if (!code.trim()) return toast.error('Enter a code');
+    if (!code.trim()) return toast.error('Enter a code, genius!');
     setIsApplying(true);
     try {
       const success = await applyReferralCode(code.trim());
-      if (success) { setCode(''); await refreshStats(); }
+      if (success) {
+        setCode('');
+        await refreshStats();
+        toast.success('BAM! Reward unlocked!');
+      }
     } finally { setIsApplying(false); }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-[100dvh] bg-pastel-yellow/20 flex items-center justify-center font-draw">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-black border-t-pastel-pink rounded-full animate-spin" />
+          <p className="text-black font-black uppercase tracking-widest text-xs">Loading Loot...</p>
+        </div>
       </div>
     );
   }
 
   const stats = [
-    { icon: Users, label: 'Total', value: referralStats?.totalReferrals || 0, color: 'text-blue-600' },
-    { icon: Trophy, label: 'Completed', value: referralStats?.completedReferrals || 0, color: 'text-emerald-600' },
-    { icon: Gift, label: 'XP Earned', value: referralStats?.totalRewardsEarned?.xp || 0, color: 'text-amber-600' },
+    { icon: Users, label: 'Friends', value: referralStats?.totalReferrals || 0, color: 'bg-pastel-blue' },
+    { icon: Trophy, label: 'Wins', value: referralStats?.completedReferrals || 0, color: 'bg-pastel-mint' },
+    { icon: Sparkles, label: 'Bonus XP', value: referralStats?.totalRewardsEarned?.xp || 0, color: 'bg-pastel-yellow' },
   ];
 
   const steps = [
-    { step: 1, text: 'Share your unique referral link' },
-    { step: 2, text: 'Friend downloads & signs up' },
-    { step: 3, text: 'Both get rewards when they complete 3 levels!' },
+    { step: 1, text: 'Blast your unique link to the world!', color: 'bg-pastel-pink' },
+    { step: 2, text: 'Friend lands on Codio & signs up!', color: 'bg-pastel-blue' },
+    { step: 3, text: 'Profit! Both get rewards after 3 levels!', color: 'bg-pastel-mint' },
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="flex items-center gap-3 px-4 py-3 max-w-lg mx-auto">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="w-9 h-9">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <Logo size="sm" showText={false} />
-          <h1 className="font-semibold text-foreground">Refer & Earn</h1>
-        </div>
-      </div>
+    <div className="min-h-[100dvh] bg-pastel-yellow/20 font-draw overflow-x-hidden">
+      {/* Unified Mobile Header */}
+      <MobileHeader
+        title="Refer & Earn"
+        showBack
+        rightElement={
+          <div className="w-10 h-10 bg-pastel-pink border-2 border-black rounded-xl flex items-center justify-center shadow-comic-sm rotate-6">
+            <Gift className="w-5 h-5 text-black" strokeWidth={2.5} />
+          </div>
+        }
+      />
 
-      <div className="max-w-lg mx-auto px-4 py-6 space-y-6">
+      <div className="max-w-2xl mx-auto px-6 pb-10 space-y-10" style={{ paddingTop: 'calc(var(--safe-area-top) + 4.5rem)' }}>
         {/* Hero */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center space-y-2"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center space-y-4"
         >
-          <div className="w-16 h-16 mx-auto bg-gradient-to-br from-emerald-100 to-cyan-100 rounded-2xl flex items-center justify-center mb-4">
-            <Gift className="w-8 h-8 text-emerald-600" />
+          <div className="relative inline-block">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+              className="absolute inset-0 bg-pastel-mint rounded-full blur-2xl opacity-30"
+            />
+            <div className="w-24 h-24 bg-white border-3 border-black rounded-[2.5rem] flex items-center justify-center relative z-10 shadow-comic-lg rotate-[-10deg]">
+              <Gift className="w-12 h-12 text-black relative z-10" strokeWidth={2.5} />
+            </div>
+            <motion.div
+              animate={{ y: [0, -10, 0], rotate: [5, 15, 5] }}
+              transition={{ duration: 3, repeat: Infinity }}
+              className="absolute -top-4 -right-4 bg-pastel-yellow border-2 border-black rounded-lg p-2 shadow-comic-sm"
+            >
+              <Star className="w-6 h-6 fill-white text-black" />
+            </motion.div>
           </div>
-          <h2 className="text-xl font-bold text-foreground">Invite Friends, Earn Rewards</h2>
-          <p className="text-sm text-muted-foreground">Get 100 XP, 50 coins & 15 hints for each friend!</p>
+          <div>
+            <h2 className="text-4xl font-black text-black leading-none tracking-tighter uppercase mt-4">Invite Your Crew</h2>
+            <p className="text-black/40 font-bold italic mt-2 uppercase text-[10px] tracking-widest">Double the learning, double the loot!</p>
+          </div>
         </motion.div>
 
-        {/* Your Code */}
-        <Card className="border-2 border-dashed border-primary/30 bg-primary/5">
-          <CardContent className="p-4 space-y-3">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Your Referral Code</p>
-            <div className="bg-background rounded-lg px-4 py-3 text-center">
-              <code className="text-2xl font-bold text-primary tracking-widest">
+        {/* Your Code card - Comic Style */}
+        <DrawnCard className="bg-white border-4 p-0 overflow-hidden shadow-comic-lg rotate-1">
+          <div className="bg-black text-white p-3 text-center border-b-3 border-black">
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] italic">Your Secret Access Code</span>
+          </div>
+          <div className="p-8 text-center space-y-6">
+            <div className="bg-pastel-yellow/20 border-3 border-dashed border-black rounded-2xl px-6 py-8 relative group">
+              <div className="absolute inset-0 bg-pastel-yellow opacity-0 group-hover:opacity-10 transition-opacity pointer-events-none" />
+              <code className="text-5xl font-black text-black tracking-[0.15em] uppercase drop-shadow-[2px_2px_0_white]">
                 {referralStats?.referralCode || '------'}
               </code>
             </div>
-            <div className="flex gap-2">
-              <Button onClick={handleCopy} variant="outline" className="flex-1 h-10">
-                <Copy className="w-4 h-4 mr-2" /> Copy
-              </Button>
-              <Button onClick={handleShare} className="flex-1 h-10 bg-primary">
-                <Share2 className="w-4 h-4 mr-2" /> Share
-              </Button>
+            <div className="flex gap-4">
+              <button
+                onClick={handleCopy}
+                className="flex-1 h-14 bg-white border-3 border-black rounded-2xl font-black text-lg uppercase tracking-tight shadow-comic-sm active:translate-y-1 active:shadow-none transition-all"
+              >
+                <Copy className="w-5 h-5 inline mr-2" strokeWidth={3} /> COPY
+              </button>
+              <DrawnButton
+                onClick={handleShare}
+                className="flex-1 h-14 bg-pastel-yellow text-xl shadow-comic-sm"
+              >
+                <Share2 className="w-5 h-5 mr-2" strokeWidth={3} /> SHARE
+              </DrawnButton>
             </div>
-          </CardContent>
-        </Card>
+            <p className="text-[10px] font-black text-black/30 uppercase tracking-widest italic leading-none">
+              Friend gets 50 XP instantly! You get 100 XP!
+            </p>
+          </div>
+        </DrawnCard>
 
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-3">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-3 gap-4">
           {stats.map((stat, i) => (
             <motion.div
               key={stat.label}
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
             >
-              <Card className="text-center">
-                <CardContent className="p-3">
-                  <stat.icon className={`w-5 h-5 mx-auto mb-1 ${stat.color}`} />
-                  <div className="text-lg font-bold text-foreground">{stat.value}</div>
-                  <div className="text-xs text-muted-foreground">{stat.label}</div>
-                </CardContent>
-              </Card>
+              <DrawnCard className={`${stat.color} p-4 text-center shadow-comic-sm rotate-[${i % 2 === 0 ? '-2deg' : '2deg'}] hover:rotate-0 transition-transform`}>
+                <stat.icon className="w-6 h-6 mx-auto mb-2 text-black" strokeWidth={3} />
+                <div className="text-2xl font-black text-black tracking-tighter">{stat.value}</div>
+                <div className="text-[8px] font-black text-black/40 uppercase tracking-widest italic">{stat.label}</div>
+              </DrawnCard>
             </motion.div>
           ))}
         </div>
 
         {/* Apply Code */}
-        <Card>
-          <CardContent className="p-4 space-y-3">
-            <p className="text-sm font-medium text-foreground">Have a referral code?</p>
-            <div className="flex gap-2">
-              <Input
-                placeholder="Enter code"
+        <DrawnCard className="bg-white shadow-comic rotate-[-1deg]">
+          <div className="p-6 space-y-5">
+            <h3 className="text-xl font-black text-black uppercase tracking-tight flex items-center gap-2">
+              <Zap className="w-5 h-5 fill-pastel-yellow text-black" strokeWidth={3} />
+              GOT A CODE?
+            </h3>
+            <div className="flex gap-3">
+              <DrawnInput
+                placeholder="TYPE IT HERE..."
                 value={code}
                 onChange={(e) => setCode(e.target.value.toUpperCase())}
-                className="flex-1 h-10 uppercase"
+                className="flex-1 h-14 uppercase font-black text-lg bg-white"
                 maxLength={16}
               />
-              <Button
+              <DrawnButton
                 onClick={handleApplyCode}
                 disabled={!code.trim() || isApplying}
-                className="h-10 px-6"
+                className="h-14 px-8 bg-pastel-pink shadow-comic-sm whitespace-nowrap"
               >
-                {isApplying ? '...' : 'Apply'}
-              </Button>
+                {isApplying ? '...' : 'CLAIM!'}
+              </DrawnButton>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Get 50 XP + 25 coins + 10 hints instantly!
-            </p>
-          </CardContent>
-        </Card>
+          </div>
+        </DrawnCard>
 
-        {/* How it works */}
-        <Card>
-          <CardContent className="p-4 space-y-4">
-            <p className="font-medium text-foreground">How it works</p>
-            <div className="space-y-3">
-              {steps.map((item) => (
-                <div key={item.step} className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <span className="text-xs font-bold text-primary">{item.step}</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">{item.text}</p>
+        {/* How it works stickers */}
+        <div className="space-y-6 !mt-16 pb-12">
+          <h3 className="text-2xl font-black text-black uppercase tracking-tighter px-2">HOW IT WORKS:</h3>
+          <div className="space-y-4">
+            {steps.map((item, i) => (
+              <motion.div
+                key={item.step}
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.5 + (i * 0.1) }}
+                className="flex items-center gap-6"
+              >
+                <div className={`w-12 h-12 rounded-2xl border-3 border-black ${item.color} flex items-center justify-center flex-shrink-0 shadow-comic-sm rotate-[${i % 2 === 0 ? '-8deg' : '8deg'}]`}>
+                  <span className="text-2xl font-black text-black">{item.step}</span>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                <DrawnCard className="flex-1 bg-white shadow-comic-sm py-4 px-6 rotate-[${i % 2 === 0 ? '0.5deg' : '-0.5deg'}]">
+                  <p className="text-sm font-black text-black/60 uppercase tracking-tight">{item.text}</p>
+                </DrawnCard>
+              </motion.div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

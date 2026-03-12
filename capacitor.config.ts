@@ -18,15 +18,32 @@ const config: CapacitorConfig = {
       initializeForTesting: false
     },
     Keyboard: {
-      resize: 'ionic'
+      resize: 'body' as any
     },
     StatusBar: {
-      style: 'dark'
+      style: 'dark' as any,
     },
     GoogleAuth: {
       scopes: ['profile', 'email'],
+      // serverClientId = web/server OAuth client (type 3) — used to get idToken for Firebase
       serverClientId: '951939133229-etgc0s5sr5ssl9g4d3goikcn97ontdkc.apps.googleusercontent.com',
-      forceCodeForRefreshToken: true
+      // androidClientId = Android OAuth client (type 1) registered with SHA-1 4c0e339f... for web.codezen
+      androidClientId: '951939133229-v93l8g236k2lb0mvr95ju7b8beg9h898.apps.googleusercontent.com',
+      forceCodeForRefreshToken: true,
+      grantOfflineAccess: true
+    },
+    SplashScreen: {
+      launchShowDuration: 2000,
+      launchAutoHide: true,
+      backgroundColor: "#FEF9C3", // App's pastel yellow theme
+      androidSplashResourceName: "splash",
+      androidScaleType: "CENTER_CROP",
+      showSpinner: false,
+      androidSpinnerStyle: "large",
+      iosSpinnerStyle: "small",
+      spinnerColor: "#000000", // Black for comic theme
+      splashFullScreen: true,
+      splashImmersive: true
     }
   },
   android: {

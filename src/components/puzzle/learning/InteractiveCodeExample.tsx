@@ -36,7 +36,7 @@ const InteractiveCodeExample: React.FC<InteractiveCodeExampleProps> = ({
           <Play className="w-4 h-4" />
           {title}
         </h4>
-        
+
         {/* Code display */}
         <div className="bg-gray-900 text-green-400 p-4 rounded-lg mb-4 overflow-x-auto">
           <pre className="text-sm whitespace-pre-wrap break-words">

@@ -1,384 +1,569 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowLeft,
-  Award,
-  Trophy,
-  BookOpen,
-  Target,
-  Code2,
-  ChevronRight,
-  Sparkles,
-  Zap,
-  Star,
-  Flame,
-  GraduationCap,
-  Play,
-  SquareCode,
-  Notebook
+    ArrowLeft,
+    Award,
+    Trophy,
+    BookOpen,
+    Target,
+    Code2,
+    ChevronRight,
+    Sparkles,
+    Zap,
+    Star,
+    Flame,
+    GraduationCap,
+    Play,
+    SquareCode,
+    Notebook,
+    Lock,
+    Crown,
+    Check,
+    Shield
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { DrawnButton, DrawnCard } from '@/components/ui/HandDrawnComponents';
+import ComicMascot from '@/components/ui/ComicMascot';
+import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import MasteryDashboard from '@/components/mastery/MasteryDashboard';
 import { useAuth } from '@/context/AuthContext';
 import { useGame } from '@/context/GameContext';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import CodePracticeEnvironment from '@/components/practice/CodePracticeEnvironment';
 import { getChallengesByLanguage, PracticeChallenge } from '@/data/practiceChallenges';
+import TopicCertificate from '@/components/mastery/TopicCertificate';
+import PremiumGateModal from '@/components/premium/PremiumGateModal';
+import { usePremiumGate } from '@/hooks/usePremiumGate';
+import MobileHeader from '@/components/MobileHeader';
 
 const Mastery = () => {
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'tests' | 'practice'>('tests');
-  const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
-  const [selectedChallenge, setSelectedChallenge] = useState<PracticeChallenge | null>(null);
+    const navigate = useNavigate();
+    const { user } = useAuth();
+    const { checkFeatureAccess, isSubscribed } = usePremiumGate();
+    const [showGate, setShowGate] = useState(false);
+    const [gateFeature, setGateFeature] = useState<'feature' | 'level'>('feature');
+    const [gateFeatureName, setGateFeatureName] = useState('');
 
-  const languages = [
-    { name: 'HTML', emoji: '🌐', color: 'from-orange-400 to-red-500', bgColor: 'bg-orange-500/10', iconColor: 'text-orange-600', path: 'web' },
-    { name: 'CSS', emoji: '🎨', color: 'from-pink-400 to-purple-600', bgColor: 'bg-pink-500/10', iconColor: 'text-pink-600', path: 'web' },
-    { name: 'JavaScript', emoji: '⚡', color: 'from-amber-400 to-orange-500', bgColor: 'bg-amber-500/10', iconColor: 'text-amber-600', path: 'web' },
-    { name: 'React', emoji: '⚛️', color: 'from-cyan-400 to-blue-500', bgColor: 'bg-cyan-500/10', iconColor: 'text-cyan-600', path: 'web' },
-    { name: 'Python', emoji: '🐍', color: 'from-emerald-400 to-green-600', bgColor: 'bg-emerald-500/10', iconColor: 'text-emerald-600', path: 'backend' },
-    { name: 'Go', emoji: '🐹', color: 'from-sky-400 to-blue-600', bgColor: 'bg-sky-500/10', iconColor: 'text-sky-600', path: 'backend' },
-    { name: 'Node.js', emoji: '🟢', color: 'from-green-400 to-emerald-600', bgColor: 'bg-green-500/10', iconColor: 'text-green-600', path: 'backend' },
-    { name: 'Swift', emoji: '🍎', color: 'from-orange-500 to-red-600', bgColor: 'bg-orange-500/10', iconColor: 'text-orange-600', path: 'mobile' },
-    { name: 'Kotlin', emoji: '💜', color: 'from-purple-500 to-indigo-600', bgColor: 'bg-purple-500/10', iconColor: 'text-purple-600', path: 'mobile' },
-    { name: 'Flutter', emoji: '🦋', color: 'from-cyan-500 to-blue-600', bgColor: 'bg-cyan-500/10', iconColor: 'text-cyan-600', path: 'mobile' },
-  ];
+    const requirePremium = (feature: string) => {
+        const gate = checkFeatureAccess(feature);
+        if (!gate.allowed) {
+            setGateFeatureName(feature);
+            setGateFeature('feature');
+            setShowGate(true);
+            return false;
+        }
+        return true;
+    };
 
-  const preferredPath = localStorage.getItem('codio_preferred_path') || 'web';
-  const { gameState } = useGame();
+    // Free users get HTML + JS mastery, everything else is premium-locked
+    const FREE_LANGUAGES = ['HTML', 'CSS', 'JavaScript'];
+    const isLangFree = (langName: string) => isSubscribed || FREE_LANGUAGES.includes(langName);
 
-  const calculateProgress = (langName: string) => {
-    const langLevels = gameState.levels.filter(l => l.topic === langName);
-    if (langLevels.length === 0) return 0;
-    const completed = langLevels.filter(l => l.isCompleted).length;
-    return Math.round((completed / langLevels.length) * 100);
-  };
+    const [activeTab, setActiveTab] = useState<'tests' | 'practice'>('tests');
+    const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
+    const [selectedChallenge, setSelectedChallenge] = useState<PracticeChallenge | null>(null);
+    const [showCertificateFor, setShowCertificateFor] = useState<string | null>(null);
+    const [completedChallenges, setCompletedChallenges] = useState<string[]>(() => {
+        const saved = localStorage.getItem('codio_completed_challenges');
+        return saved ? JSON.parse(saved) : [];
+    });
 
-  const filteredLanguages = languages
-    .filter(lang => lang.path === preferredPath)
-    .map(lang => ({ ...lang, progress: calculateProgress(lang.name) }));
+    useEffect(() => {
+        localStorage.setItem('codio_completed_challenges', JSON.stringify(completedChallenges));
+    }, [completedChallenges]);
 
-  const otherLanguages = languages
-    .filter(lang => lang.path !== preferredPath)
-    .map(lang => ({ ...lang, progress: calculateProgress(lang.name) }));
+    const languages = [
+        { name: 'HTML', emoji: '🌐', color: 'bg-pastel-yellow', path: 'web' },
+        { name: 'CSS', emoji: '🎨', color: 'bg-pastel-pink', path: 'web' },
+        { name: 'JavaScript', emoji: '⚡', color: 'bg-pastel-blue', path: 'web' },
+        { name: 'React', emoji: '⚛️', color: 'bg-pastel-lavender', path: 'web' },
+        { name: 'Python', emoji: '🐍', color: 'bg-pastel-mint', path: 'backend' },
+        { name: 'Go', emoji: '🐹', color: 'bg-pastel-cyan', path: 'backend' },
+        { name: 'Node.js', emoji: '🟢', color: 'bg-pastel-lavender', path: 'backend' },
+        { name: 'Swift', emoji: '🍎', color: 'bg-pastel-yellow', path: 'mobile' },
+        { name: 'Kotlin', emoji: '💜', color: 'bg-pastel-lavender', path: 'mobile' },
+        { name: 'Flutter', emoji: '🦋', color: 'bg-pastel-cyan', path: 'mobile' },
+    ];
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-4 pb-20">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-        >
-          <Card className="w-full max-w-sm border-primary/20 overflow-hidden shadow-xl rounded-3xl">
-            <div className="h-2 bg-gradient-to-r from-primary via-purple-500 to-pink-500" />
-            <CardContent className="p-8 text-center">
-              <motion.div
-                className="w-24 h-24 bg-gradient-to-br from-primary/20 to-purple-500/20 rounded-3xl flex items-center justify-center mx-auto mb-6"
-                animate={{ rotate: [0, 5, -5, 0] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                <GraduationCap className="w-12 h-12 text-primary" />
-              </motion.div>
-              <h2 className="text-2xl font-bold mb-2 text-foreground">Master Your Skills</h2>
-              <p className="text-muted-foreground mb-6">Sign in to access certification tests and practice</p>
-              <Button onClick={() => navigate('/auth')} className="w-full h-12 text-base rounded-xl font-bold">
-                <Sparkles className="w-5 h-5 mr-2" />
-                Sign In to Continue
-              </Button>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-    );
-  }
+    const preferredPath = localStorage.getItem('codio_preferred_path') || 'web';
+    const { gameState } = useGame();
 
-  const handleBackFromChallenge = () => {
-    if (selectedChallenge) {
-      setSelectedChallenge(null);
-    } else if (selectedLanguage) {
-      setSelectedLanguage(null);
-    } else {
-      navigate(-1);
+    const calculateProgress = (langName: string) => {
+        const langLevels = gameState.levels.filter(l => l.topic === langName);
+        if (langLevels.length === 0) return 0;
+        const completed = langLevels.filter(l => l.isCompleted).length;
+        return Math.round((completed / langLevels.length) * 100);
+    };
+
+    const filteredLanguages = languages
+        .filter(lang => lang.path === preferredPath)
+        .map(lang => ({ ...lang, progress: calculateProgress(lang.name) }));
+
+    const otherLanguages = languages
+        .filter(lang => lang.path !== preferredPath)
+        .map(lang => ({ ...lang, progress: calculateProgress(lang.name) }));
+
+    if (!user) {
+        return (
+            <div className="min-h-[100dvh] bg-pastel-yellow/20 flex items-center justify-center px-6 pb-32 font-draw">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.9, rotate: -2 }}
+                    animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                >
+                    <DrawnCard className="w-full max-w-sm bg-white p-8 text-center shadow-comic-lg">
+                        <div className="w-24 h-24 bg-pastel-blue border-3 border-black rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-comic rotate-3">
+                            <GraduationCap className="w-12 h-12 text-black" strokeWidth={2.5} />
+                        </div>
+                        <h2 className="text-3xl font-black mb-2 text-black tracking-tighter uppercase">Mastery Awaits</h2>
+                        <p className="text-black/40 font-bold mb-8 italic text-sm">Sign in to unlock your full coding potential!</p>
+                        <DrawnButton onClick={() => navigate('/auth')} className="w-full h-14 text-xl bg-pastel-yellow shadow-comic">
+                            <Sparkles className="w-6 h-6 mr-2" />
+                            LET'S GO!
+                        </DrawnButton>
+                    </DrawnCard>
+                </motion.div>
+            </div>
+        );
     }
-  };
 
-  // Show challenge editor
-  if (selectedChallenge) {
-    return (
-      <div className="min-h-screen bg-background pb-24">
-        <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-md border-b border-border/50 pt-safe-top">
-          <div className="px-4 py-4 max-w-2xl mx-auto">
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleBackFromChallenge}
-                className="rounded-xl shrink-0 hover:bg-primary/10"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-              <div className="min-w-0 flex-1">
-                <h1 className="text-lg font-bold text-foreground truncate">
-                  {selectedChallenge.title}
-                </h1>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <span>{selectedLanguage}</span>
-                  <span>•</span>
-                  <span className={`capitalize ${selectedChallenge.difficulty === 'easy' ? 'text-green-500' :
-                    selectedChallenge.difficulty === 'medium' ? 'text-amber-500' :
-                      'text-red-500'
-                    }`}>
-                    {selectedChallenge.difficulty}
-                  </span>
+    const handleBackFromChallenge = () => {
+        if (selectedChallenge) {
+            setSelectedChallenge(null);
+        } else if (selectedLanguage) {
+            setSelectedLanguage(null);
+        } else {
+            navigate(-1);
+        }
+    };
+
+    const handleChallengeComplete = () => {
+        if (!selectedChallenge || !selectedLanguage) return;
+
+        if (!completedChallenges.includes(selectedChallenge.id)) {
+            setCompletedChallenges(prev => [...prev, selectedChallenge.id]);
+        }
+
+        const challenges = getChallengesByLanguage(selectedLanguage);
+        const currentIndex = challenges.findIndex(c => c.id === selectedChallenge.id);
+
+        if (currentIndex !== -1 && currentIndex < challenges.length - 1) {
+            setTimeout(() => {
+                setSelectedChallenge(challenges[currentIndex + 1]);
+                toast.info(`Next Up: ${challenges[currentIndex + 1].title}`, {
+                    description: "Don't stop now!"
+                });
+            }, 1500);
+        } else {
+            setTimeout(() => {
+                toast.success("Skill Mastered!", {
+                    description: `You've conquered ${selectedLanguage}!`
+                });
+                setSelectedChallenge(null);
+            }, 1500);
+        }
+    };
+
+    if (selectedChallenge) {
+        return (
+            <div className="min-h-[100dvh] bg-pastel-yellow/20 pb-32 font-draw">
+                <MobileHeader
+                    title={selectedChallenge.title}
+                    subtitle={`${selectedLanguage} • ${selectedChallenge.difficulty}`}
+                    showBack
+                    onBack={handleBackFromChallenge}
+                />
+
+                <div className="px-6 py-8 max-w-2xl mx-auto" style={{ paddingTop: 'calc(var(--safe-area-top) + 4.5rem)' }}>
+                    <CodePracticeEnvironment
+                        key={selectedChallenge.id}
+                        language={selectedLanguage || 'JavaScript'}
+                        challenge={{
+                            title: selectedChallenge.title,
+                            description: selectedChallenge.description,
+                            starterCode: selectedChallenge.starterCode,
+                            expectedOutput: selectedChallenge.expectedOutput,
+                            hint: selectedChallenge.hint,
+                        }}
+                        onComplete={handleChallengeComplete}
+                    />
                 </div>
-              </div>
             </div>
-          </div>
-        </div>
+        );
+    }
 
-        <div className="px-4 py-6 max-w-2xl mx-auto">
-          <CodePracticeEnvironment
-            language={selectedLanguage || 'JavaScript'}
-            challenge={{
-              title: selectedChallenge.title,
-              description: selectedChallenge.description,
-              starterCode: selectedChallenge.starterCode,
-              expectedOutput: selectedChallenge.expectedOutput,
-              hint: selectedChallenge.hint,
-            }}
-          />
-        </div>
-      </div>
-    );
-  }
+    if (selectedLanguage) {
+        const challenges = getChallengesByLanguage(selectedLanguage);
+        const langInfo = languages.find(l => l.name === selectedLanguage);
 
-  // Show challenge list for selected language
-  if (selectedLanguage) {
-    const challenges = getChallengesByLanguage(selectedLanguage);
-    const langInfo = languages.find(l => l.name === selectedLanguage);
+        return (
+            <div className="min-h-[100dvh] bg-pastel-yellow/20 pb-32 font-draw overflow-x-hidden">
+                <MobileHeader
+                    title={selectedLanguage}
+                    subtitle={`${challenges.length} Missions`}
+                    showBack
+                    onBack={handleBackFromChallenge}
+                    rightElement={
+                        <div className={`w-10 h-10 ${langInfo?.color || 'bg-pastel-blue'} border-2 border-black rounded-xl flex items-center justify-center shadow-comic-sm`}>
+                            <span className="text-xl">{langInfo?.emoji}</span>
+                        </div>
+                    }
+                />
 
-    return (
-      <div className="min-h-screen bg-background pb-28">
-        <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-md border-b border-border/50 pt-safe-top">
-          <div className="px-4 py-4 max-w-2xl mx-auto">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleBackFromChallenge}
-                className="rounded-xl shrink-0 hover:bg-primary/10"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-              <div className={`w-12 h-12 bg-gradient-to-br ${langInfo?.color || 'from-primary to-primary/60'} rounded-2xl flex items-center justify-center shrink-0 shadow-lg`}>
-                <span className="text-2xl">{langInfo?.emoji}</span>
-              </div>
-              <div className="min-w-0 flex-1">
-                <h1 className="text-lg font-bold text-foreground truncate">
-                  {selectedLanguage} Path
-                </h1>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                  {challenges.length} Steps to Mastery
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+                <div className="px-6 py-12 max-w-2xl mx-auto relative" style={{ paddingTop: 'calc(var(--safe-area-top) + 5rem)' }}>
+                    {/* Path Line - Dotted Hand Drawn Style */}
+                    <div className="absolute left-[3.2rem] top-12 bottom-0 w-1 bg-black/10 border-l-2 border-dashed border-black/20" />
 
-        <div className="px-6 py-8 max-w-2xl mx-auto relative">
-          {/* Path Line */}
-          <div className="absolute left-[3.2rem] top-8 bottom-0 w-1 bg-border/40 rounded-full" />
+                    <div className="space-y-12 relative">
+                        {challenges.map((challenge, index) => {
+                            const isFirst = index === 0;
+                            const isPrevCompleted = index > 0 && completedChallenges.includes(challenges[index - 1].id);
+                            const isUnlocked = isFirst || isPrevCompleted;
+                            const isCompleted = completedChallenges.includes(challenge.id);
 
-          <div className="space-y-8 relative">
-            {challenges.map((challenge, index) => (
-              <motion.div
-                key={challenge.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className="flex items-center gap-6"
-              >
-                <div
-                  className={`w-14 h-14 rounded-full border-4 shrink-0 flex items-center justify-center cursor-pointer transition-all z-10 ${index === 0 // Assuming first is unlocked/current
-                    ? `bg-white border-${langInfo?.iconColor.split('-')[1]}-500 shadow-lg scale-110`
-                    : 'bg-muted border-transparent opacity-60'
-                    }`}
-                  onClick={() => setSelectedChallenge(challenge)}
-                >
-                  <Code2 className={`w-6 h-6 ${index === 0 ? langInfo?.iconColor : 'text-muted-foreground'}`} />
-                </div>
+                            return (
+                                <motion.div
+                                    key={challenge.id}
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: index * 0.05 }}
+                                    className="flex items-center gap-6"
+                                >
+                                    <div
+                                        className={`w-14 h-14 rounded-full border-3 shrink-0 flex items-center justify-center cursor-pointer transition-all z-10 shadow-comic-sm ${isUnlocked
+                                            ? isCompleted
+                                                ? `bg-pastel-mint border-black rotate-12 scale-110`
+                                                : `bg-white border-black scale-110`
+                                            : 'bg-black/5 border-black/10 grayscale opacity-50'
+                                            }`}
+                                        onClick={() => isUnlocked && setSelectedChallenge(challenge)}
+                                    >
+                                        {isCompleted ? (
+                                            <Trophy className="w-7 h-7 text-black" strokeWidth={2.5} />
+                                        ) : (
+                                            <Code2 className={`w-7 h-7 ${isUnlocked ? 'text-black' : 'text-black/30'}`} strokeWidth={2.5} />
+                                        )}
+                                    </div>
 
-                <Card
-                  className={`flex-1 rounded-2xl border-0 shadow-sm hover:shadow-md transition-all cursor-pointer ${index === 0 ? 'bg-white' : 'bg-muted/30'}`}
-                  onClick={() => setSelectedChallenge(challenge)}
-                >
-                  <CardContent className="p-4 flex items-center justify-between">
-                    <div>
-                      <h3 className={`font-bold ${index === 0 ? 'text-foreground' : 'text-muted-foreground'}`}>{challenge.title}</h3>
-                      <p className="text-xs text-muted-foreground">{challenge.difficulty} Practice</p>
+                                    <DrawnCard
+                                        className={`flex-1 p-0 overflow-hidden ${isUnlocked ? 'bg-white' : 'bg-black/5 border-black/10 opacity-60'} shadow-comic-sm`}
+                                        style={{ transform: `rotate(${index % 2 === 0 ? '-1deg' : '1deg'})` }}
+                                        onClick={() => isUnlocked && setSelectedChallenge(challenge)}
+                                    >
+                                        <div className="p-4 flex items-center justify-between">
+                                            <div>
+                                                <h3 className="font-black text-lg text-black uppercase tracking-tight">{challenge.title}</h3>
+                                                <p className="text-[10px] font-black text-black/40 uppercase italic tracking-widest">{challenge.difficulty} Practice</p>
+                                            </div>
+                                            {isUnlocked && !isCompleted && (
+                                                <DrawnButton className="bg-pastel-yellow text-xs px-4 h-9 shadow-comic-sm">GO!</DrawnButton>
+                                            )}
+                                            {isCompleted && (
+                                                <div className="px-3 py-1 bg-pastel-mint border-2 border-black rounded-lg text-[10px] font-black uppercase shadow-comic-sm">DONE</div>
+                                            )}
+                                        </div>
+                                    </DrawnCard>
+                                </motion.div>
+                            );
+                        })}
                     </div>
-                    {index === 0 && (
-                      <Button size="sm" className="rounded-full bg-primary h-8 px-4">Start</Button>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-h-[100dvh] bg-pastel-yellow/20 pb-32 font-draw overflow-x-hidden">
+            <MobileHeader
+                title="Mastery Road"
+                subtitle="Choose your destiny"
+                showBack
+                rightElement={
+                    <div className="w-10 h-10 bg-pastel-yellow border-2 border-black rounded-xl flex items-center justify-center shadow-comic-sm rotate-3">
+                        <Award className="w-6 h-6 text-black" strokeWidth={2.5} />
+                    </div>
+                }
+            />
+
+            <div className="px-6 pb-6 max-w-2xl mx-auto space-y-8" style={{ paddingTop: 'calc(var(--safe-area-top) + 4.5rem)' }}>
+                {/* Visual content from before */}
+                <div className="grid grid-cols-2 gap-4">
+                    {/* LABS — Pro/Elite only */}
+                    <div className="relative">
+                        <DrawnCard
+                            className="p-1 cursor-pointer bg-white group shadow-comic rotate-[-2deg]"
+                            onClick={() => {
+                                if (!requirePremium('playground')) return;
+                                navigate('/playground');
+                            }}
+                        >
+                            <div className="p-5 bg-black text-white rounded-[1.2rem] h-full flex flex-col justify-between border-2 border-white/10">
+                                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform rotate-3">
+                                    <SquareCode className="w-7 h-7 text-pastel-yellow" strokeWidth={2.5} />
+                                </div>
+                                <div>
+                                    <h4 className="font-black text-lg leading-tight uppercase tracking-tight">LABS</h4>
+                                    <p className="text-[8px] font-black text-white/40 uppercase tracking-widest italic leading-none">Live Coding</p>
+                                </div>
+                            </div>
+                        </DrawnCard>
+                        {!isSubscribed && (
+                            <div className="absolute top-2 right-2 z-10 bg-pastel-pink border-2 border-black rounded-lg px-2 py-0.5 flex items-center gap-1 shadow-comic-sm">
+                                <Lock className="h-3 w-3 text-black" strokeWidth={3} />
+                                <span className="text-[8px] font-black uppercase">PRO</span>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* MEMOS — Elite only */}
+                    <div className="relative">
+                        <DrawnCard
+                            className="p-1 cursor-pointer bg-white group shadow-comic rotate-[2deg]"
+                            onClick={() => {
+                                if (!requirePremium('memos')) return;
+                                navigate('/memo');
+                            }}
+                        >
+                            <div className="p-5 bg-white text-black rounded-[1.2rem] h-full flex flex-col justify-between border-2 border-black/5">
+                                <div className="w-12 h-12 bg-black/5 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform -rotate-3">
+                                    <Notebook className="w-7 h-7 text-black" strokeWidth={2.5} />
+                                </div>
+                                <div>
+                                    <h4 className="font-black text-lg leading-tight uppercase tracking-tight">MEMOS</h4>
+                                    <p className="text-[8px] font-black text-black/40 uppercase tracking-widest italic leading-none">Quick Notes</p>
+                                </div>
+                            </div>
+                        </DrawnCard>
+                        {!isSubscribed && (
+                            <div className="absolute top-2 right-2 z-10 bg-pastel-yellow border-2 border-black rounded-lg px-2 py-0.5 flex items-center gap-1 shadow-comic-sm">
+                                <Lock className="h-3 w-3 text-black" strokeWidth={3} />
+                                <span className="text-[8px] font-black uppercase">ELITE</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Hero Card - Current Focus */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                >
+                    <DrawnCard className="p-0 bg-black border-4 border-black relative overflow-visible shadow-comic-lg rotate-1">
+                        <div className="absolute -top-4 -left-4 bg-pastel-pink border-3 border-black px-4 py-1.5 rounded-full rotate-[-12deg] z-20 font-black text-xs shadow-comic-sm">
+                            RECOMMENDED!
+                        </div>
+
+                        <div className="p-8 relative z-10 flex flex-col items-center text-center">
+                            <div className="w-20 h-20 bg-pastel-yellow border-3 border-black rounded-3xl flex items-center justify-center mb-6 shadow-comic rotate-6 relative">
+                                <span className="text-4xl font-black text-black">JS</span>
+                            </div>
+
+                            <h2 className="text-4xl font-black text-white leading-none mb-3 tracking-tighter uppercase">
+                                JS MASTERY
+                            </h2>
+                            <p className="text-pastel-blue font-black uppercase text-[10px] tracking-widest italic mb-8">
+                                The most popular certification
+                            </p>
+
+                            <DrawnButton
+                                className="w-full h-16 text-2xl bg-pastel-yellow shadow-comic-sm hover:translate-y-0 active:translate-y-1"
+                                onClick={() => setSelectedLanguage('JavaScript')}
+                            >
+                                START MISSION
+                            </DrawnButton>
+                        </div>
+                    </DrawnCard>
+                </motion.div>
+
+                {/* Vertical Language List */}
+                <div className="space-y-6 pt-4">
+                    <h3 className="font-black text-black text-2xl uppercase tracking-tighter px-2">YOUR {preferredPath} PATH</h3>
+
+                    <div className="space-y-4">
+                        {filteredLanguages.map((lang, index) => {
+                            const isPremiumLang = !isLangFree(lang.name);
+                            return (
+                                <div
+                                    key={lang.name}
+                                >
+                                    <DrawnCard
+                                        className={`group cursor-pointer bg-white shadow-comic-sm p-4 hover:shadow-comic active:scale-[0.98] transition-all relative overflow-hidden ${isPremiumLang ? 'opacity-80' : ''}`}
+                                        style={{ transform: `rotate(${index % 2 === 0 ? '1deg' : '-1deg'})` }}
+                                        onClick={() => {
+                                            if (isPremiumLang) {
+                                                setGateFeatureName(lang.name);
+                                                setGateFeature('feature');
+                                                setShowGate(true);
+                                                return;
+                                            }
+                                            setSelectedLanguage(lang.name);
+                                        }}
+                                    >
+                                        {isPremiumLang && (
+                                            <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-10 flex items-center justify-end pr-4">
+                                                <div className="flex items-center gap-1.5 bg-black text-white text-[9px] font-black uppercase px-3 py-1.5 rounded-xl">
+                                                    <Lock className="h-3 w-3" strokeWidth={3} />
+                                                    PREMIUM ONLY
+                                                </div>
+                                            </div>
+                                        )}
+                                        <div className="flex items-center gap-5">
+                                            <div
+                                                className={`w-16 h-16 ${lang.color} border-3 border-black rounded-2xl flex items-center justify-center text-3xl shrink-0 group-hover:scale-110 transition-transform shadow-comic-sm`}
+                                                style={{ transform: `rotate(${index % 2 === 0 ? '-3deg' : '3deg'})` }}
+                                            >
+                                                {lang.emoji}
+                                            </div>
+
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="text-xl font-black text-black tracking-tight uppercase leading-none mb-2">{lang.name}</h4>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="h-4 flex-1 bg-black/5 border-2 border-black rounded-lg overflow-hidden p-0.5">
+                                                        <div
+                                                            className={`h-full bg-pastel-mint border-r-2 border-black rounded-[4px] shadow-inner transition-all duration-1000`}
+                                                            style={{ width: `${lang.progress}%` }}
+                                                        />
+                                                    </div>
+                                                    <span className="text-[10px] font-black text-black italic">{lang.progress}%</span>
+                                                </div>
+                                            </div>
+
+                                            {lang.progress === 100 && !isPremiumLang && (
+                                                <DrawnButton
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setShowCertificateFor(lang.name);
+                                                    }}
+                                                    className="bg-cc-yellow text-[10px] px-3 h-8 shadow-comic-sm shrink-0 border-2"
+                                                >
+                                                    <Sparkles className="w-3 h-3 mr-1" /> CERT
+                                                </DrawnButton>
+                                            )}
+
+                                            <div className="w-10 h-10 rounded-xl border-2 border-black flex items-center justify-center group-hover:bg-pastel-yellow transition-colors shadow-comic-sm">
+                                                {isPremiumLang ? <Lock className="w-5 h-5 text-black" strokeWidth={2.5} /> : <ChevronRight className="w-6 h-6 text-black" strokeWidth={3} />}
+                                            </div>
+                                        </div>
+                                    </DrawnCard>
+                                </div>
+                            )
+                        })}
+                    </div>
+
+                    {/* Premium Showcase Banner — shown only for free users */}
+                    {!isSubscribed && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.3 }}
+                            className="mt-6"
+                        >
+                            <DrawnCard className="bg-black text-white p-6 shadow-[8px_8px_0_#333] border-4 border-black rounded-3xl relative overflow-hidden">
+                                <div className="absolute -right-8 -top-8 w-40 h-40 bg-pastel-yellow/10 rounded-full blur-2xl" />
+                                <div className="absolute -left-6 -bottom-6 w-32 h-32 bg-pastel-mint/10 rounded-full blur-2xl" />
+                                <div className="relative z-10">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="w-12 h-12 bg-pastel-yellow border-2 border-white/20 rounded-2xl flex items-center justify-center rotate-6">
+                                            <Crown className="h-6 w-6 text-black" strokeWidth={2.5} />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-black text-white/50 uppercase tracking-widest">You're on free</p>
+                                            <h3 className="text-xl font-black text-white uppercase leading-tight">Unlock Everything</h3>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-2 mb-5">
+                                        {[
+                                            { icon: '🌐', label: 'All 10 Languages' },
+                                            { icon: '⚡', label: 'Unlimited AI Hints' },
+                                            { icon: '🏆', label: '200+ Levels' },
+                                            { icon: '🎓', label: 'Skill Certificates' },
+                                            { icon: '🔥', label: 'Streak Shield' },
+                                            { icon: '🧪', label: 'Live Code Labs' },
+                                        ].map((f, i) => (
+                                            <div key={i} className="flex items-center gap-2">
+                                                <span className="text-sm">{f.icon}</span>
+                                                <span className="text-[10px] font-black text-white/70 uppercase">{f.label}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div className="flex items-center justify-between p-3 bg-white/10 rounded-2xl mb-4">
+                                        <div>
+                                            <p className="text-[9px] font-black text-white/40 uppercase">Pro Monthly</p>
+                                            <p className="text-2xl font-black text-white">$19<span className="text-sm text-white/50">/mo</span></p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-[9px] font-black text-white/40 uppercase">Elite Yearly</p>
+                                            <p className="text-lg font-black text-pastel-yellow">$149 <span className="line-through text-white/30 text-sm">$228</span></p>
+                                            <p className="text-[9px] font-black text-green-400">SAVE 35%</p>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        onClick={() => navigate('/subscription')}
+                                        className="w-full h-12 bg-pastel-yellow text-black font-black text-sm uppercase rounded-2xl border-2 border-white/20 shadow-[3px_3px_0_rgba(255,255,255,0.2)] active:shadow-none transition-all flex items-center justify-center gap-2"
+                                    >
+                                        <Sparkles className="h-4 w-4" />
+                                        Start 7-Day Free Trial — $0
+                                    </button>
+                                    <p className="text-center mt-2 text-[9px] text-white/30 font-bold uppercase">No card needed • Cancel anytime</p>
+                                </div>
+                            </DrawnCard>
+                        </motion.div>
                     )}
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
 
-  return (
-    <div className="min-h-screen bg-background pb-28">
-      {/* Scrollable Content */}
-      <div className="px-6 pt-safe-top pb-6 max-w-2xl mx-auto space-y-8">
-
-        {/* Header */}
-        <div className="flex items-center justify-between py-4">
-          <div>
-            <h1 className="text-2xl font-black text-slate-800 tracking-tight">Mastery Path</h1>
-            <p className="text-sm font-medium text-slate-500">Choose a certification to start</p>
-          </div>
-          <div className="w-10 h-10 bg-pastel-yellow rounded-xl flex items-center justify-center border-study shadow-sm">
-            <Award className="w-6 h-6 text-slate-800" />
-          </div>
-        </div>
-
-        {/* Quick Tools */}
-        <div className="grid grid-cols-2 gap-4">
-          <Card
-            className="rounded-[2rem] border-2 border-study p-1 cursor-pointer overflow-hidden group"
-            onClick={() => navigate('/playground')}
-          >
-            <CardContent className="p-6 bg-slate-900 text-white rounded-[1.8rem] h-full flex flex-col justify-between">
-              <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <SquareCode className="w-6 h-6 text-yellow-400" />
-              </div>
-              <div>
-                <h4 className="font-black text-lg leading-tight mb-1">Playground</h4>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Live Execution</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card
-            className="rounded-[2rem] border-2 border-study p-1 cursor-pointer overflow-hidden group"
-            onClick={() => navigate('/memo')}
-          >
-            <CardContent className="p-6 bg-white rounded-[1.8rem] h-full flex flex-col justify-between">
-              <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <Notebook className="w-6 h-6 text-slate-800" />
-              </div>
-              <div>
-                <h4 className="font-black text-lg leading-tight mb-1">Memos</h4>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Study Notes</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Hero Card - Current Focus */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <Card className="rounded-[2.5rem] border-0 shadow-2xl bg-gradient-to-br from-slate-900 to-slate-800 overflow-hidden relative group cursor-pointer border-b-8 border-slate-950">
-            <div className="absolute top-0 right-0 p-8 opacity-5">
-              <Target className="w-48 h-48 text-white rotate-12" />
-            </div>
-            <CardContent className="p-8 relative z-10">
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                  <Badge className="bg-white/10 text-white border-white/20 mb-3 hover:bg-white/20">
-                    Recommended
-                  </Badge>
-                  <h2 className="text-3xl font-black text-white leading-tight mb-2">
-                    JavaScript<br />Certification
-                  </h2>
-                  <p className="text-slate-400 font-medium">
-                    75% of developers start here.
-                  </p>
-                </div>
-                <div className="w-16 h-16 bg-amber-400 rounded-2xl flex items-center justify-center border-4 border-amber-300 shadow-lg origin-bottom-right rotate-3 group-hover:rotate-6 transition-transform">
-                  <span className="text-3xl">JS</span>
-                </div>
-              </div>
-
-              <Button
-                className="w-full h-14 rounded-2xl bg-amber-400 hover:bg-amber-500 text-amber-950 font-black text-lg border-b-4 border-amber-600 active:border-b-0 active:translate-y-1 transition-all"
-                onClick={() => setSelectedLanguage('JavaScript')}
-              >
-                Continue Path
-              </Button>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Vertical Language List */}
-        <div className="space-y-4">
-          <h3 className="font-black text-slate-800 text-lg uppercase tracking-tight">Your {preferredPath} Path</h3>
-
-          {filteredLanguages.map((lang, index) => (
-            <motion.div
-              key={lang.name}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <Card
-                className="group cursor-pointer rounded-[2rem] border-study border-2 border-primary/20 hover:border-primary/50 transition-all active:scale-[0.98] bg-white overflow-hidden"
-                onClick={() => setSelectedLanguage(lang.name)}
-              >
-                <CardContent className="p-4 flex items-center gap-4">
-                  <div className={`w-16 h-16 ${lang.bgColor} rounded-2xl flex items-center justify-center text-3xl shrink-0 group-hover:scale-110 transition-transform duration-300`}>
-                    {lang.emoji}
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-lg font-black text-slate-800 mb-1">{lang.name}</h4>
-                    <div className="flex items-center gap-2">
-                      <div className="h-2 flex-1 bg-slate-100 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full bg-gradient-to-r ${lang.color} transition-all duration-1000`}
-                          style={{ width: `${lang.progress}%` }}
-                        />
-                      </div>
-                      <span className="text-xs font-bold text-slate-400">{lang.progress}%</span>
+                    <h3 className="font-black text-black/20 text-2xl uppercase tracking-tighter px-2 mt-12 mb-4">OTHER QUESTS</h3>
+                    <div className="grid grid-cols-2 gap-4 pb-12">
+                        {otherLanguages.map((lang, idx) => (
+                            <div key={lang.name} className="relative">
+                                <DrawnCard
+                                    onClick={() => {
+                                        if (!isSubscribed) {
+                                            setGateFeatureName(lang.name);
+                                            setGateFeature('feature');
+                                            setShowGate(true);
+                                            return;
+                                        }
+                                        setSelectedLanguage(lang.name);
+                                    }}
+                                    className="p-3 bg-white cursor-pointer hover:shadow-comic-sm active:scale-95 transition-all text-center"
+                                    style={{ transform: `rotate(${idx % 2 === 0 ? '-2deg' : '2deg'})` }}
+                                >
+                                    <div className={`w-12 h-12 ${lang.color} border-2 border-black rounded-xl flex items-center justify-center text-2xl mx-auto mb-2`}>
+                                        {lang.emoji}
+                                    </div>
+                                    <span className="font-black text-xs uppercase tracking-tight text-black">{lang.name}</span>
+                                </DrawnCard>
+                                {!isSubscribed && (
+                                    <div className="absolute top-1 right-1 w-6 h-6 bg-black rounded-full flex items-center justify-center border border-white/20">
+                                        <Lock className="h-3 w-3 text-white" strokeWidth={3} />
+                                    </div>
+                                )}
+                            </div>
+                        ))}
                     </div>
-                  </div>
-
-                  <div className="w-10 h-10 rounded-full border-2 border-slate-100 flex items-center justify-center group-hover:bg-slate-50 transition-colors">
-                    <ChevronRight className="w-5 h-5 text-slate-400" />
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-
-          <h3 className="font-black text-slate-400 text-lg uppercase tracking-tight pt-6">Other Paths</h3>
-          <div className="grid grid-cols-1 gap-3">
-            {otherLanguages.map((lang) => (
-              <div
-                key={lang.name}
-                onClick={() => setSelectedLanguage(lang.name)}
-                className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-100 cursor-pointer hover:bg-white hover:shadow-md transition-all"
-              >
-                <div className={`w-10 h-10 ${lang.bgColor} rounded-xl flex items-center justify-center text-xl`}>
-                  {lang.emoji}
                 </div>
-                <span className="font-bold text-slate-600">{lang.name}</span>
-              </div>
-            ))}
-          </div>
+            </div>
+
+            <AnimatePresence>
+                {showCertificateFor && (
+                    <TopicCertificate
+                        userName={(user as any).user_metadata?.full_name || user.email?.split('@')[0] || "Codio Student"}
+                        topic={showCertificateFor}
+                        date={new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                        onClose={() => setShowCertificateFor(null)}
+                    />
+                )}
+            </AnimatePresence>
+
+            <PremiumGateModal
+                isOpen={showGate}
+                onClose={() => setShowGate(false)}
+                lockedFeature={gateFeatureName}
+                trigger={gateFeature}
+            />
         </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 export default Mastery;

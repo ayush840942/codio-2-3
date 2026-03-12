@@ -11,8 +11,8 @@ densities = {
 }
 
 base_path = 'android/app/src/main/res'
-# Using the logo-robot.jpg as the source
-source_path = 'public/logo-robot.jpg'
+# Using the cloud-mascot.jpg as the source
+source_path = 'public/cloud-mascot.jpg'
 
 if not os.path.exists(source_path):
     print(f"Error: Source image {source_path} not found!")

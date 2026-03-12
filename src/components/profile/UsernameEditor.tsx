@@ -4,10 +4,13 @@ import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
-import { Loader2, Edit3, Check, X } from 'lucide-react';
+import { Loader2, Edit3, Check, X, Sparkles, Crown } from 'lucide-react';
+import { useSubscriptionFeatures } from '@/hooks/useSubscriptionFeatures';
+import { Badge } from '@/components/ui/badge';
 
 const UsernameEditor = () => {
   const { user, profile, setProfile } = useAuth();
+  const { subscriptionTier, isSubscribed } = useSubscriptionFeatures();
   const [username, setUsername] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [isEditing, setIsEditing] = useState(false);
@@ -28,7 +31,7 @@ const UsernameEditor = () => {
       setError('You must be logged in to update your profile');
       return;
     }
-    
+
     if (!username.trim()) {
       setError('Username cannot be empty');
       return;
@@ -48,8 +51,8 @@ const UsernameEditor = () => {
     try {
       const trimmedUsername = username.trim().toLowerCase();
       const trimmedDisplayName = displayName.trim();
-      
-      // Check if username is already taken by another user
+
+      // 1. Check if the HANDLE (username) is taken
       const { data: existingUsername, error: usernameCheckError } = await supabase
         .from('profiles')
         .select('id')
@@ -57,98 +60,45 @@ const UsernameEditor = () => {
         .neq('id', user.id)
         .maybeSingle();
 
-      if (usernameCheckError) {
-        console.error('Error checking username:', usernameCheckError);
-        throw new Error('Failed to verify username availability');
-      }
-
+      if (usernameCheckError) throw usernameCheckError;
       if (existingUsername) {
-        setError('This username is already taken');
+        setError('That handle is already claimed! Try another?');
         setLoading(false);
         return;
       }
 
-      // Generate a unique user_name if display name is provided
-      // Add a random suffix to avoid unique constraint issues
-      let uniqueUserName = trimmedDisplayName || null;
-      
-      if (trimmedDisplayName) {
-        // Check if user_name is already taken by another user
-        const { data: existingDisplayName } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('user_name', trimmedDisplayName)
-          .neq('id', user.id)
-          .maybeSingle();
+      // 2. Prepare the update object
+      const updateData: any = {
+        username: trimmedUsername,
+        full_name: trimmedDisplayName || null,
+        updated_at: new Date().toISOString()
+      };
 
-        // If taken by someone else, add a unique suffix
-        if (existingDisplayName) {
-          const randomSuffix = Math.random().toString(36).substring(2, 6);
-          uniqueUserName = `${trimmedDisplayName}_${randomSuffix}`;
-        }
-      }
-
-      // Update the profile
+      // 3. Try updating profile directly
       const { data: updatedProfile, error: updateError } = await supabase
         .from('profiles')
-        .update({
-          username: trimmedUsername,
-          user_name: uniqueUserName,
-          full_name: trimmedDisplayName || null,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', user.id)
         .select()
         .single();
 
       if (updateError) {
-        console.error('Error updating profile:', updateError);
-        // Check for unique constraint violation
-        if (updateError.code === '23505' || updateError.message?.includes('unique constraint') || updateError.message?.includes('duplicate key')) {
-          // Try again with a different unique suffix
-          const randomSuffix = Date.now().toString(36);
-          const retryUserName = trimmedDisplayName ? `${trimmedDisplayName}_${randomSuffix}` : null;
-          
-          const { data: retryProfile, error: retryError } = await supabase
-            .from('profiles')
-            .update({
-              username: trimmedUsername,
-              user_name: retryUserName,
-              full_name: trimmedDisplayName || null,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', user.id)
-            .select()
-            .single();
-            
-          if (retryError) {
-            setError('This username or display name is already taken. Please try a different one.');
-            setLoading(false);
-            return;
-          }
-          
-          if (retryProfile) {
-            setProfile(retryProfile);
-            setSuccess('Profile updated successfully!');
-            setIsEditing(false);
-            setTimeout(() => setSuccess(''), 3000);
-            return;
-          }
+        if (updateError.code === '23505') {
+          setError('Something went wrong (duplicate entry). Try a different handle!');
+        } else {
+          throw updateError;
         }
-        throw new Error(updateError.message || 'Failed to update profile');
+        setLoading(false);
+        return;
       }
 
-      // Update the profile in context - this propagates the change everywhere
       if (updatedProfile) {
         setProfile(updatedProfile);
+        setSuccess('Profile updated! 🚀');
+        setIsEditing(false);
+        setTimeout(() => setSuccess(''), 3000);
       }
 
-      setSuccess('Profile updated successfully!');
-      setIsEditing(false);
-      
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(''), 3000);
-      
     } catch (error: any) {
       console.error('Error updating profile:', error);
       setError(error.message || 'Failed to update profile. Please try again.');
@@ -231,7 +181,7 @@ const UsernameEditor = () => {
                 </>
               )}
             </Button>
-            
+
             <Button
               onClick={handleCancel}
               variant="outline"
@@ -246,12 +196,33 @@ const UsernameEditor = () => {
         </div>
       ) : (
         <div className="space-y-1">
-          <div className="flex items-center justify-center gap-2">
+          <div className="flex items-center justify-center gap-2 flex-wrap">
             <h2 className="text-lg font-semibold text-foreground">
               {displayFullName}
             </h2>
-            <Button 
-              variant="ghost" 
+            {isSubscribed && (
+              <Badge
+                variant="outline"
+                className={`flex items-center gap-1.5 h-6 px-2 rounded-full border-none font-black text-[10px] uppercase tracking-wider ${subscriptionTier === 'elite' || subscriptionTier === 'premium-yearly'
+                  ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-white shadow-sm'
+                  : 'bg-primary text-slate-900 shadow-sm'
+                  }`}
+              >
+                {subscriptionTier === 'elite' || subscriptionTier === 'premium-yearly' ? (
+                  <>
+                    <Crown className="w-3 h-3 fill-white" />
+                    Elite
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-3 h-3 fill-slate-900" />
+                    Pro
+                  </>
+                )}
+              </Badge>
+            )}
+            <Button
+              variant="ghost"
               size="sm"
               onClick={() => setIsEditing(true)}
               className="p-1 h-auto hover:bg-secondary"

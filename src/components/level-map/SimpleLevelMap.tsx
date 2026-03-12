@@ -2,8 +2,12 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { PuzzleLevel } from '@/context/GameContext';
 import SimpleLevelCard from './SimpleLevelCard';
-import { Trophy, Zap, BookOpen, Star, CheckCircle2 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Trophy, BookOpen, Star } from 'lucide-react';
+import { DrawnCard } from '@/components/ui/HandDrawnComponents';
+import ComicMascot from '@/components/ui/ComicMascot';
+import MobileHeader from '@/components/MobileHeader';
+import { StreakDisplay } from '../streak/StreakDisplay';
+import { HeartsDisplay } from '../hearts/HeartsDisplay';
 
 interface SimpleLevelMapProps {
   levels: PuzzleLevel[];
@@ -35,103 +39,137 @@ const SimpleLevelMap: React.FC<SimpleLevelMapProps> = ({
   });
 
   const getTopicInfo = (topic: string) => {
-    const info: Record<string, { bg: string; emoji: string }> = {
-      'HTML': { bg: 'bg-pastel-pink', emoji: '🌐' },
-      'CSS': { bg: 'bg-pastel-blue', emoji: '🎨' },
-      'JavaScript': { bg: 'bg-pastel-yellow', emoji: '⚡' },
-      'Python': { bg: 'bg-pastel-mint', emoji: '🐍' },
-      'React': { bg: 'bg-pastel-blue', emoji: '⚛️' },
-      'Database': { bg: 'bg-pastel-lavender', emoji: '🗄️' },
+    const info: Record<string, { bg: string; variant: any; emoji: string }> = {
+      'HTML': { bg: 'bg-cc-pink', variant: 'cc-pink', emoji: '🌐' },
+      'CSS': { bg: 'bg-cc-blue', variant: 'cc-blue', emoji: '🎨' },
+      'JavaScript': { bg: 'bg-cc-yellow', variant: 'cc-yellow', emoji: '⚡' },
+      'Python': { bg: 'bg-cc-green', variant: 'cc-green', emoji: '🐍' },
+      'React': { bg: 'bg-cc-blue', variant: 'cc-blue', emoji: '⚛️' },
+      'Database': { bg: 'bg-cc-purple', variant: 'white', emoji: '🗄️' },
     };
-    return info[topic] || { bg: 'bg-pastel-blue', emoji: '📚' };
+    return info[topic] || { bg: 'bg-cc-blue', variant: 'cc-blue', emoji: '📚' };
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 pb-8 relative">
-      {/* Header */}
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="sticky top-0 z-10 -mx-4 px-4 py-4 mb-6">
-        <Card className="bg-card border border-border rounded-3xl shadow-md">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-pastel-blue border border-border rounded-2xl flex items-center justify-center">
-                  <BookOpen className="w-6 h-6 text-foreground" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-foreground">Learn to Code</h1>
-                  <p className="text-sm text-muted-foreground">{completedCount}/{totalCount} levels</p>
-                </div>
-              </div>
-              <motion.span className="text-2xl font-bold text-foreground" animate={{ scale: [1, 1.05, 1] }} transition={{ duration: 2, repeat: Infinity }}>
-                {progressPercent}%
-              </motion.span>
-            </div>
-            <div className="h-3 bg-secondary border border-border rounded-full overflow-hidden">
-              <motion.div className="h-full bg-pastel-mint rounded-full" initial={{ width: 0 }} animate={{ width: `${progressPercent}%` }} transition={{ duration: 1 }} />
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
+    <div className="max-w-2xl mx-auto px-4 pb-32 relative font-draw">
+      {/* Unified Mobile Header */}
+      <MobileHeader
+        title="The Path"
+        subtitle={`${completedCount} / ${totalCount} MASTERED`}
+        rightElement={
+          <div className="flex items-center gap-2">
+            <StreakDisplay showLabel={false} />
+            <HeartsDisplay showTimer={false} />
+          </div>
+        }
+      />
 
-      {/* Topics */}
-      <div className="space-y-6">
-        {orderedTopics.map((topic, topicIndex) => {
-          const topicLevels = groupedLevels[topic];
-          const topicCompleted = topicLevels.filter(l => l.isCompleted).length;
-          const topicTotal = topicLevels.length;
-          const isTopicComplete = topicCompleted === topicTotal && topicTotal > 0;
-          const info = getTopicInfo(topic);
+      <div style={{ paddingTop: 'calc(var(--safe-area-top) + 4.5rem)' }}>
+        <div className="max-w-2xl mx-auto px-4 mb-4">
+          <div className="h-4 bg-gray-100 border-3 border-black rounded-full overflow-hidden relative shadow-comic-sm">
+            <div
+              className="h-full bg-cc-green"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+        </div>
+        {/* Topics List */}
+        <div className="space-y-12">
+          {orderedTopics.map((topic, topicIndex) => {
+            const topicLevels = groupedLevels[topic];
+            const topicCompleted = topicLevels.filter(l => l.isCompleted).length;
+            const topicTotal = topicLevels.length;
+            const isTopicComplete = topicCompleted === topicTotal && topicTotal > 0;
+            const info = getTopicInfo(topic);
 
-          return (
-            <motion.div key={topic} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: topicIndex * 0.05 }} className="space-y-3">
-              <Card className={`${info.bg} border border-border rounded-2xl shadow-sm`}>
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-card border border-border rounded-xl flex items-center justify-center text-xl">
-                      {info.emoji}
-                    </div>
-                    <div>
-                      <h2 className="font-bold text-foreground">{topic}</h2>
-                      <p className="text-xs text-foreground/70">{topicCompleted}/{topicTotal} completed</p>
+            return (
+              <div
+                key={topic}
+                className="space-y-6"
+              >
+                <div className="flex items-center gap-4 ml-2">
+                  <div className="w-14 h-14 border-3 border-black rounded-2xl bg-white flex items-center justify-center text-3xl shadow-comic-sm -rotate-3">
+                    {info.emoji}
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-black text-black uppercase tracking-tight">{topic}</h2>
+                    {isTopicComplete && (
+                      <span className="inline-block text-[10px] bg-white px-2 py-0.5 border-2 border-black rounded-full font-black uppercase tracking-widest mt-1">MASTERED</span>
+                    )}
+                  </div>
+                </div>
+
+                <DrawnCard variant={info.variant} className="border-4 relative rounded-none p-10 min-h-[300px] flex items-center justify-center overflow-visible">
+                  {/* Background Decoration */}
+                  <div className="absolute right-4 bottom-4 opacity-5 rotate-12 pointer-events-none">
+                    <Trophy className="w-32 h-32 text-black" />
+                  </div>
+
+                  <div className="relative z-10 w-full max-w-md mx-auto">
+                    <div className="flex flex-col gap-10">
+                      {/* Group levels into chunks of 5 for a 3-2 staggered pattern */}
+                      {Array.from({ length: Math.ceil(topicLevels.length / 5) }).map((_, groupIndex) => {
+                        const chunk = topicLevels.slice(groupIndex * 5, groupIndex * 5 + 5);
+                        return (
+                          <div key={groupIndex} className="flex flex-col gap-10">
+                            {/* Row of 3 */}
+                            <div className="flex justify-center gap-4 sm:gap-8">
+                              {chunk.slice(0, 3).map((level, i) => {
+                                const isFirstLevel = level.id === 1;
+                                const previousLevel = sortedLevels.find(l => l.id === level.id - 1);
+                                const isUnlocked = isFirstLevel || (previousLevel && previousLevel.isCompleted);
+                                return (
+                                  <SimpleLevelCard
+                                    key={level.id}
+                                    level={level}
+                                    isUnlocked={isUnlocked && canAccessLevel(level.id)}
+                                    canAccess={canAccessLevel(level.id)}
+                                    onPlay={onPlayLevel}
+                                    index={groupIndex * 5 + i}
+                                  />
+                                );
+                              })}
+                            </div>
+                            {/* Row of 2 */}
+                            {chunk.length > 3 && (
+                              <div className="flex justify-center gap-10 sm:gap-16">
+                                {chunk.slice(3, 5).map((level, i) => {
+                                  const isFirstLevel = level.id === 1;
+                                  const previousLevel = sortedLevels.find(l => l.id === level.id - 1);
+                                  const isUnlocked = isFirstLevel || (previousLevel && previousLevel.isCompleted);
+                                  return (
+                                    <SimpleLevelCard
+                                      key={level.id}
+                                      level={level}
+                                      isUnlocked={isUnlocked && canAccessLevel(level.id)}
+                                      canAccess={canAccessLevel(level.id)}
+                                      onPlay={onPlayLevel}
+                                      index={groupIndex * 5 + 3 + i}
+                                    />
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
-                  {isTopicComplete && (
-                    <div className="flex items-center gap-1 bg-card border border-border px-3 py-1 rounded-full">
-                      <CheckCircle2 className="w-4 h-4 text-foreground" />
-                      <span className="text-xs font-medium text-foreground">Done</span>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              <div className="flex flex-wrap gap-2 pl-2">
-                {topicLevels.map((level, levelIndex) => {
-                  const isFirstLevel = level.id === 1;
-                  const previousLevel = sortedLevels.find(l => l.id === level.id - 1);
-                  const isUnlocked = isFirstLevel || (previousLevel && previousLevel.isCompleted);
-                  return (
-                    <SimpleLevelCard key={level.id} level={level} isUnlocked={isUnlocked && canAccessLevel(level.id)} canAccess={canAccessLevel(level.id)} onPlay={onPlayLevel} index={levelIndex} />
-                  );
-                })}
+                </DrawnCard>
               </div>
-            </motion.div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
 
-      {completedCount === totalCount && totalCount > 0 && (
-        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="mt-8">
-          <Card className="bg-pastel-yellow border border-border rounded-3xl shadow-md">
-            <CardContent className="p-8 text-center">
-              <motion.div animate={{ rotate: [0, 360] }} transition={{ duration: 4, repeat: Infinity, ease: "linear" }}>
-                <Trophy className="w-16 h-16 text-foreground mx-auto mb-4" />
-              </motion.div>
-              <h3 className="text-2xl font-bold text-foreground mb-2">🎉 Congratulations! 🎉</h3>
-              <p className="text-foreground/70">You've mastered all {totalCount} levels!</p>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
+        {completedCount === totalCount && totalCount > 0 && (
+          <div className="mt-12 text-center">
+            <DrawnCard className="bg-pastel-yellow p-10 border-4 border-black shadow-comic">
+              <h3 className="text-4xl font-black mb-4 text-black uppercase">WORLD MASTER!</h3>
+              <p className="text-xl font-bold opacity-70 text-slate-800 italic">You've conquered all {totalCount} coding challenges!</p>
+            </DrawnCard>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

@@ -10,6 +10,7 @@ interface HeartsContextType {
     timeUntilNextHeart: number;
     canPlay: boolean;
     loseHeart: () => void;
+    addHearts: (amount: number) => Promise<void>;
     purchaseHeart: (xpBalance: number) => { success: boolean; newXP: number };
     refillHearts: () => void;
 }
@@ -115,10 +116,8 @@ export const HeartsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     // Auto-refill timer
     useEffect(() => {
-        if (!isLoaded) return;
-
-        if (hearts >= HEARTS_CONFIG.MAX_HEARTS) {
-            setTimeUntilNextHeart(0);
+        if (!isLoaded || hearts >= HEARTS_CONFIG.MAX_HEARTS) {
+            if (timeUntilNextHeart !== 0) setTimeUntilNextHeart(0);
             return;
         }
 
@@ -129,7 +128,6 @@ export const HeartsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
             if (heartsToAdd > 0) {
                 const newHearts = Math.min(hearts + heartsToAdd, HEARTS_CONFIG.MAX_HEARTS);
-                // Preserve the "remainder" time to prevent premature resets
                 const newRefillTime = lastRefillTime + (heartsToAdd * HEARTS_CONFIG.REFILL_TIME_MS);
 
                 setHearts(newHearts);
@@ -137,13 +135,17 @@ export const HeartsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 saveHearts(newHearts, newRefillTime);
             }
 
-            // Calculate time until next heart
             const timeRemaining = HEARTS_CONFIG.REFILL_TIME_MS - (timeSinceRefill % HEARTS_CONFIG.REFILL_TIME_MS);
-            setTimeUntilNextHeart(timeRemaining);
+
+            // Only update if the value has changed significantly (e.g. by at least 500ms to avoid micro-jitter)
+            setTimeUntilNextHeart(prev => {
+                const diff = Math.abs(prev - timeRemaining);
+                return diff > 500 ? timeRemaining : prev;
+            });
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [hearts, lastRefillTime, saveHearts, isLoaded]);
+    }, [hearts, lastRefillTime, saveHearts, isLoaded, timeUntilNextHeart]);
 
     const loseHeart = useCallback(() => {
         setHearts(prev => {
@@ -156,6 +158,16 @@ export const HeartsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             }
             saveHearts(newHearts, newRefillTime);
             return newHearts;
+        });
+    }, [lastRefillTime, saveHearts]);
+
+    const addHearts = useCallback(async (amount: number) => {
+        return new Promise<void>((resolve) => {
+            setHearts(prev => {
+                const newHearts = Math.min(prev + amount, HEARTS_CONFIG.MAX_HEARTS);
+                saveHearts(newHearts, lastRefillTime).then(() => resolve());
+                return newHearts;
+            });
         });
     }, [lastRefillTime, saveHearts]);
 
@@ -197,6 +209,7 @@ export const HeartsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 timeUntilNextHeart,
                 canPlay,
                 loseHeart,
+                addHearts,
                 purchaseHeart,
                 refillHearts,
             }}

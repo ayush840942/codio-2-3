@@ -15,6 +15,13 @@ export interface LearningExercise {
   question: string;
   starter?: string;
   solution?: string;
+  options?: string[];
+  correctAnswer?: string;
+  type?: 'multiple-choice' | 'fill-in-the-blank' | 'matching' | 'spot-the-bug' | 'drag-to-order';
+  // New fields for advanced exercises
+  codeLines?: string[];
+  buggyLineIndex?: number;
+  explanation?: string;
 }
 
 export interface LearningPage {
@@ -24,7 +31,8 @@ export interface LearningPage {
   concepts: LearningConcept[];
   visualExample: string;
   practiceHint: string;
-  type?: 'concept' | 'example' | 'practice' | 'theory';
+  type?: 'concept' | 'example' | 'practice' | 'theory' | 'interactive';
+  interactionType?: 'multiple-choice' | 'fill-in-the-blank' | 'matching' | 'code-walkthrough' | 'spot-the-bug' | 'drag-to-order';
   codeExample?: string;
   keyPoints?: string[];
   exercise?: LearningExercise;

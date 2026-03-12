@@ -1405,7 +1405,7 @@ const Child = React.memo(({ onClick }) => {
   const [results, setResults] = useState([]);
   
   useEffect(() => {
-    fetch(\`/api/search?q=\${query}\`)
+    fetch(`/api/search?q=${query}`)
       .then(res => res.json())
       .then(data => setResults(data));
   }, [query]);

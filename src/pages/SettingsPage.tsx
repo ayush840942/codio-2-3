@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { DrawnButton, DrawnCard } from '@/components/ui/HandDrawnComponents';
 import { Switch } from '@/components/ui/switch';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
   Bell,
-  Moon,
   Volume2,
   Vibrate,
   Globe,
@@ -19,6 +17,8 @@ import {
   FileText,
   Check
 } from 'lucide-react';
+import Logo from '@/components/ui/logo';
+import MobileHeader from '@/components/MobileHeader';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { toast } from 'sonner';
 import {
@@ -43,10 +43,9 @@ const LANGUAGES = [
 
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { isSupported, isRegistered, requestPermission, sendNotification } = usePushNotifications();
+  const { isSupported, requestPermission, sendNotification } = usePushNotifications();
   const [isSendingTest, setIsSendingTest] = useState(false);
   const [showLanguageDialog, setShowLanguageDialog] = useState(false);
-  const [showPrivacyDialog, setShowPrivacyDialog] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState(() =>
     localStorage.getItem('app_language') || 'en'
   );
@@ -71,48 +70,28 @@ const SettingsPage: React.FC = () => {
     localStorage.setItem('app_language', langCode);
     setSelectedLanguage(langCode);
     setShowLanguageDialog(false);
-    toast.success(`Language changed to ${LANGUAGES.find(l => l.code === langCode)?.name}`);
+    toast.success(`Language changed!`);
   };
 
-  // Settings state with localStorage persistence
-  const [notifications, setNotifications] = useState(() =>
-    localStorage.getItem('settings_notifications') !== 'false'
-  );
-  const [darkMode, setDarkMode] = useState(() =>
-    localStorage.getItem('settings_darkMode') === 'true'
-  );
-  const [sound, setSound] = useState(() =>
-    localStorage.getItem('settings_sound') !== 'false'
-  );
-  const [haptics, setHaptics] = useState(() =>
-    localStorage.getItem('settings_haptics') !== 'false'
-  );
+  const [notifications, setNotifications] = useState(() => localStorage.getItem('settings_notifications') !== 'false');
+  const [sound, setSound] = useState(() => localStorage.getItem('settings_sound') !== 'false');
+  const [haptics, setHaptics] = useState(() => localStorage.getItem('settings_haptics') !== 'false');
+  const [musicEnabled, setMusicEnabled] = useState(() => localStorage.getItem('settings_music') !== 'false');
+  const [showPrivacyDialog, setShowPrivacyDialog] = useState(false);
 
   const handleSettingChange = async (key: string, value: boolean, setter: (v: boolean) => void) => {
-    // Handle push notifications specially
     if (key === 'notifications' && value && isSupported) {
       const success = await requestPermission();
       if (!success) {
-        toast.error('Could not enable notifications');
+        toast.error('Permission denied');
         return;
       }
     }
-
     localStorage.setItem(`settings_${key}`, String(value));
     setter(value);
-
-    // Apply dark mode immediately
-    if (key === 'darkMode') {
-      if (value) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-    }
   };
 
   const handleClearCache = () => {
-    // Clear app cache (localStorage items except auth)
     const authData = localStorage.getItem('supabase.auth.token');
     localStorage.clear();
     if (authData) localStorage.setItem('supabase.auth.token', authData);
@@ -121,318 +100,151 @@ const SettingsPage: React.FC = () => {
 
   const settingsGroups = [
     {
-      title: 'Preferences',
+      title: 'PREFERENCES',
       items: [
+        { icon: Bell, label: 'Notifications', desc: 'Game reminders', value: notifications, onChange: (v: boolean) => handleSettingChange('notifications', v, setNotifications) },
+        { icon: Volume2, label: 'Sound FX', desc: 'Playful sounds', value: sound, onChange: (v: boolean) => handleSettingChange('sound', v, setSound) },
         {
-          icon: Bell,
-          label: 'Push Notifications',
-          desc: 'Get reminders and updates',
-          value: notifications,
-          onChange: (v: boolean) => handleSettingChange('notifications', v, setNotifications)
+          icon: Volume2, label: 'Music', desc: 'Game BGM', value: musicEnabled, onChange: (v: boolean) => {
+            localStorage.setItem('settings_music', String(v));
+            setMusicEnabled(v);
+            window.dispatchEvent(new Event('storage')); // Trigger BGM component update
+            toast.success(`Music ${v ? 'Enabled' : 'Disabled'}`);
+          }
         },
-        {
-          icon: Moon,
-          label: 'Dark Mode',
-          desc: 'Reduce eye strain',
-          value: darkMode,
-          onChange: (v: boolean) => handleSettingChange('darkMode', v, setDarkMode)
-        },
-        {
-          icon: Volume2,
-          label: 'Sound Effects',
-          desc: 'Play sounds on actions',
-          value: sound,
-          onChange: (v: boolean) => handleSettingChange('sound', v, setSound)
-        },
-        {
-          icon: Vibrate,
-          label: 'Haptic Feedback',
-          desc: 'Vibrate on interactions',
-          value: haptics,
-          onChange: (v: boolean) => handleSettingChange('haptics', v, setHaptics)
-        }
+        { icon: Vibrate, label: 'Haptics', desc: 'Vibrate on tap', value: haptics, onChange: (v: boolean) => handleSettingChange('haptics', v, setHaptics) }
       ]
     }
   ];
 
   const currentLang = LANGUAGES.find(l => l.code === selectedLanguage);
-
   const actionItems = [
-    {
-      icon: Globe,
-      label: 'Language',
-      desc: `${currentLang?.flag} ${currentLang?.name}`,
-      action: () => setShowLanguageDialog(true)
-    },
-    {
-      icon: Shield,
-      label: 'Privacy Policy',
-      desc: 'View our policies',
-      action: () => setShowPrivacyDialog(true)
-    },
-    {
-      icon: FileText,
-      label: 'Terms of Service',
-      desc: 'Read our terms',
-      action: () => setShowPrivacyDialog(true)
-    },
-    {
-      icon: Trash2,
-      label: 'Clear Cache',
-      desc: 'Free up storage',
-      action: handleClearCache,
-      danger: true
-    }
+    { icon: Globe, label: 'Language', desc: `${currentLang?.flag} ${currentLang?.name}`, action: () => setShowLanguageDialog(true) },
+    { icon: Shield, label: 'Privacy Policy', desc: 'Rules & safety', action: () => setShowPrivacyDialog(true) },
+    { icon: FileText, label: 'Terms', desc: 'Legal stuff', action: () => setShowPrivacyDialog(true) },
+    { icon: Trash2, label: 'Clear Cache', desc: 'Reset app data', action: handleClearCache, danger: true }
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-lavender-50 to-background pb-28">
-      <div className="px-4 py-6 space-y-5 max-w-md mx-auto">
+    <div className="min-h-[100dvh] bg-pastel-yellow/30 font-draw pb-32 relative">
+      {/* Background patterns */}
+      <div className="absolute inset-0 opacity-10 pointer-events-none"
+        style={{ backgroundImage: 'radial-gradient(circle, #000 1.2px, transparent 1.2px)', backgroundSize: '25px 25px' }} />
 
-        {/* Header */}
-        <div className="flex items-center gap-4">
-          <Button
-            onClick={() => navigate(-1)}
-            variant="ghost"
-            size="icon"
-            className="w-10 h-10 rounded-2xl bg-card border border-border"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground font-display">Settings</h1>
-            <p className="text-sm text-muted-foreground">Customize your experience</p>
-          </div>
-        </div>
+      <div className="px-5 pb-10 space-y-10 max-w-md mx-auto relative z-10" style={{ paddingTop: 'calc(var(--safe-area-top) + 4.5rem)' }}>
+        {/* Unified Mobile Header */}
+        <MobileHeader
+          title="SETTINGS"
+          subtitle="Customize your app"
+          showBack
+        />
 
-        {/* Settings Groups */}
+        {/* Groups */}
         {settingsGroups.map((group, groupIndex) => (
-          <motion.div
-            key={group.title}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: groupIndex * 0.1 }}
-          >
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 px-1">
-              {group.title}
+          <motion.div key={group.title} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: groupIndex * 0.1 }}>
+            <h2 className="text-xs font-black text-black/40 mb-3 px-1 uppercase tracking-[0.3em] flex items-center gap-2">
+              <div className="w-2 h-2 bg-black rounded-full" /> {group.title}
             </h2>
-            <Card>
-              <CardContent className="p-0 divide-y divide-border">
-                {group.items.map((item, i) => (
-                  <div key={item.label} className="flex items-center justify-between p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-secondary rounded-xl flex items-center justify-center">
-                        <item.icon className="w-5 h-5 text-muted-foreground" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-foreground">{item.label}</p>
-                        <p className="text-xs text-muted-foreground">{item.desc}</p>
-                      </div>
+            <DrawnCard className="bg-white p-0 overflow-hidden divide-y-4 divide-black border-4 border-black shadow-comic-lg">
+              {group.items.map((item) => (
+                <div key={item.label} className="flex items-center justify-between p-5 bg-white/50">
+                  <div className="flex items-center gap-5">
+                    <div className="w-12 h-12 bg-pastel-blue/20 rounded-2xl flex items-center justify-center border-3 border-black shadow-comic-sm">
+                      <item.icon className="w-6 h-6 text-black" strokeWidth={3} />
                     </div>
-                    <Switch
-                      checked={item.value}
-                      onCheckedChange={item.onChange}
-                    />
+                    <div>
+                      <p className="font-black text-black leading-tight text-lg uppercase tracking-tight">{item.label}</p>
+                      <p className="text-[10px] font-black opacity-40 uppercase italic">{item.desc}</p>
+                    </div>
                   </div>
-                ))}
-              </CardContent>
-            </Card>
+                  <Switch checked={item.value} onCheckedChange={item.onChange} className="data-[state=checked]:bg-cc-green" />
+                </div>
+              ))}
+            </DrawnCard>
           </motion.div>
         ))}
 
-        {/* Test Notification */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-        >
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 px-1">
-            Developer Tools
+        {/* Dev Tools */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+          <h2 className="text-xs font-black text-black/40 mb-3 px-1 uppercase tracking-[0.3em] flex items-center gap-2">
+            <div className="w-2 h-2 bg-cc-pink rounded-full" /> DEV ZONE
           </h2>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
-                    <Send className="w-5 h-5 text-primary" />
+          <DrawnCard className="bg-cc-pink/5 p-5 border-4 border-black border-dashed shadow-comic">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-5">
+                <div className="w-12 h-12 bg-cc-pink/20 rounded-2xl flex items-center justify-center border-3 border-black shadow-comic-sm">
+                  <Send className="w-6 h-6 text-black" strokeWidth={3} />
+                </div>
+                <div>
+                  <p className="font-black text-black leading-tight text-lg uppercase tracking-tight">TEST PUSH</p>
+                  <p className="text-[10px] font-black opacity-40 uppercase italic">Send test ping</p>
+                </div>
+              </div>
+              <DrawnButton
+                onClick={handleTestNotification}
+                disabled={isSendingTest}
+                className="h-12 px-6 py-0 text-md bg-cc-green border-3 border-black shadow-comic active:translate-y-1 active:shadow-none transition-all font-black"
+              >
+                {isSendingTest ? <Loader2 className="w-5 h-5 animate-spin" /> : 'GO!'}
+              </DrawnButton>
+            </div>
+          </DrawnCard>
+        </motion.div>
+
+        {/* More */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+          <h2 className="text-xs font-black text-black/40 mb-3 px-1 uppercase tracking-[0.3em] flex items-center gap-2">
+            <div className="w-2 h-2 bg-cc-blue rounded-full" /> MORE STUFF
+          </h2>
+          <DrawnCard className="bg-white p-0 overflow-hidden divide-y-4 divide-black border-4 border-black shadow-comic-lg">
+            {actionItems.map((item) => (
+              <div key={item.label} className="flex items-center justify-between p-5 cursor-pointer active:bg-black/5 hover:bg-black/5 transition-colors" onClick={item.action}>
+                <div className="flex items-center gap-5">
+                  <div className={`w-12 h-12 ${item.danger ? 'bg-pastel-pink/20' : 'bg-pastel-lavender/20'} rounded-2xl flex items-center justify-center border-3 border-black shadow-comic-sm`}>
+                    <item.icon className={`w-6 h-6 ${item.danger ? 'text-pastel-pink' : 'text-black'}`} strokeWidth={3} />
                   </div>
                   <div>
-                    <p className="font-medium text-foreground">Test Push Notification</p>
-                    <p className="text-xs text-muted-foreground">Send a test notification to your device</p>
+                    <p className={`font-black text-lg leading-tight uppercase tracking-tight ${item.danger ? 'text-pastel-pink' : 'text-black'}`}>{item.label}</p>
+                    <p className="text-[10px] font-black opacity-40 uppercase italic">{item.desc}</p>
                   </div>
                 </div>
-                <Button
-                  size="sm"
-                  onClick={handleTestNotification}
-                  disabled={isSendingTest}
-                >
-                  {isSendingTest ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    'Send'
-                  )}
-                </Button>
+                <ChevronRight className="w-6 h-6 text-black/30" strokeWidth={3} />
               </div>
-            </CardContent>
-          </Card>
+            ))}
+          </DrawnCard>
         </motion.div>
 
-        {/* Action Items */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 px-1">
-            More
-          </h2>
-          <Card>
-            <CardContent className="p-0 divide-y divide-border">
-              {actionItems.map((item) => (
-                <div
-                  key={item.label}
-                  className="flex items-center justify-between p-4 cursor-pointer active:bg-secondary/50 transition-colors"
-                  onClick={item.action}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${item.danger ? 'bg-destructive/10' : 'bg-secondary'
-                      }`}>
-                      <item.icon className={`w-5 h-5 ${item.danger ? 'text-destructive' : 'text-muted-foreground'
-                        }`} />
-                    </div>
-                    <div>
-                      <p className={`font-medium ${item.danger ? 'text-destructive' : 'text-foreground'}`}>
-                        {item.label}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{item.desc}</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* App Version */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="text-center pt-4"
-        >
-          <p className="text-sm text-muted-foreground">Codio v1.0.0</p>
-          <p className="text-xs text-muted-foreground/60">Made with ❤️ for learners</p>
-        </motion.div>
+        {/* Footer */}
+        <div className="text-center pt-16 opacity-30 pb-12 relative flex flex-col items-center">
+          <div className="w-24 h-24 mb-4 bg-black/10 rounded-full flex items-center justify-center grayscale opacity-50">
+            <Logo size="sm" showText={false} />
+          </div>
+          <p className="font-black text-xl tracking-tighter italic">CODIO v1.2.0</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] mt-1">MADE WITH ✨ FOR LEARNERS</p>
+        </div>
       </div>
 
-      {/* Language Dialog */}
+      {/* Dialogs */}
       <Dialog open={showLanguageDialog} onOpenChange={setShowLanguageDialog}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm rounded-[2rem] border-3 border-black p-6 font-draw">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Globe className="w-5 h-5" />
-              Select Language
-            </DialogTitle>
+            <DialogTitle className="text-2xl font-black text-center">SELECT LANGUAGE</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-2 max-h-[60vh] overflow-y-auto">
+          <div className="grid gap-2 max-h-[60vh] overflow-y-auto pt-4">
             {LANGUAGES.map((lang) => (
               <button
                 key={lang.code}
                 onClick={() => handleLanguageChange(lang.code)}
-                className={`flex items-center justify-between p-3 rounded-xl transition-colors ${selectedLanguage === lang.code
-                    ? 'bg-primary/10 border-2 border-primary'
-                    : 'bg-secondary hover:bg-secondary/80'
+                className={`flex items-center justify-between p-4 rounded-2xl border-2 transition-all ${selectedLanguage === lang.code ? 'bg-pastel-yellow border-black shadow-comic-sm' : 'bg-white border-black/10'
                   }`}
               >
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">{lang.flag}</span>
-                  <span className="font-medium text-foreground">{lang.name}</span>
+                  <span className="font-black text-black">{lang.name}</span>
                 </div>
-                {selectedLanguage === lang.code && (
-                  <Check className="w-5 h-5 text-primary" />
-                )}
+                {selectedLanguage === lang.code && <Check className="w-6 h-6 text-black" strokeWidth={4} />}
               </button>
             ))}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Privacy Policy Dialog */}
-      <Dialog open={showPrivacyDialog} onOpenChange={setShowPrivacyDialog}>
-        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Shield className="w-5 h-5" />
-              Privacy Policy & Terms
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 text-sm text-muted-foreground">
-            <section>
-              <h3 className="font-semibold text-foreground mb-2">Privacy Policy</h3>
-              <p>
-                Codio ("we", "our", or "us") is committed to protecting your privacy.
-                This Privacy Policy explains how we collect, use, and safeguard your information.
-              </p>
-            </section>
-
-            <section>
-              <h4 className="font-medium text-foreground mb-1">Information We Collect</h4>
-              <ul className="list-disc pl-4 space-y-1">
-                <li>Account information (email, username)</li>
-                <li>Learning progress and achievements</li>
-                <li>Device information for notifications</li>
-                <li>Usage analytics to improve the app</li>
-              </ul>
-            </section>
-
-            <section>
-              <h4 className="font-medium text-foreground mb-1">How We Use Your Information</h4>
-              <ul className="list-disc pl-4 space-y-1">
-                <li>To provide and personalize learning experiences</li>
-                <li>To track your progress and achievements</li>
-                <li>To send notifications about streaks and rewards</li>
-                <li>To improve our services</li>
-              </ul>
-            </section>
-
-            <section>
-              <h4 className="font-medium text-foreground mb-1">Data Security</h4>
-              <p>
-                We implement industry-standard security measures to protect your data.
-                Your information is encrypted and stored securely.
-              </p>
-            </section>
-
-            <section>
-              <h3 className="font-semibold text-foreground mb-2">Terms of Service</h3>
-              <p>
-                By using Codio, you agree to these terms. You must be at least 13 years old
-                to use this service. You are responsible for maintaining the security of your account.
-              </p>
-            </section>
-
-            <section>
-              <h4 className="font-medium text-foreground mb-1">Acceptable Use</h4>
-              <ul className="list-disc pl-4 space-y-1">
-                <li>Use the app for personal learning only</li>
-                <li>Do not attempt to hack or exploit the app</li>
-                <li>Do not share your account credentials</li>
-                <li>Respect other users and our community</li>
-              </ul>
-            </section>
-
-            <section>
-              <h4 className="font-medium text-foreground mb-1">Contact Us</h4>
-              <p>
-                If you have questions about our privacy policy or terms,
-                please contact us at support@codio.app
-              </p>
-            </section>
-
-            <p className="text-xs text-muted-foreground/60 pt-4">
-              Last updated: January 2026
-            </p>
           </div>
         </DialogContent>
       </Dialog>

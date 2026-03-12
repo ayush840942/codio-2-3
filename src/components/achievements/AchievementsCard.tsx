@@ -1,16 +1,15 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Trophy, Target, Zap, Crown, Star, CheckCircle2 } from 'lucide-react';
 import { useGame } from '@/context/GameContext';
+import { DrawnCard } from '@/components/ui/HandDrawnComponents';
+import ComicMascot from '@/components/ui/ComicMascot';
 
 const AchievementsCard = () => {
   const { gameState } = useGame();
-  
-  const totalLevels = gameState.levels.length;
+
   const completedLevels = gameState.levels.filter(level => level.isCompleted).length;
-  
+
   const achievements = [
     {
       id: 1,
@@ -20,8 +19,7 @@ const AchievementsCard = () => {
       achieved: completedLevels >= 1,
       progress: Math.min(completedLevels, 1),
       target: 1,
-      gradient: "from-green-400 to-emerald-600",
-      bgColor: "bg-green-50",
+      color: "bg-cc-green",
     },
     {
       id: 2,
@@ -31,8 +29,7 @@ const AchievementsCard = () => {
       achieved: completedLevels >= 5,
       progress: Math.min(completedLevels, 5),
       target: 5,
-      gradient: "from-blue-400 to-indigo-600",
-      bgColor: "bg-blue-50",
+      color: "bg-cc-blue",
     },
     {
       id: 3,
@@ -42,8 +39,7 @@ const AchievementsCard = () => {
       achieved: completedLevels >= 10,
       progress: Math.min(completedLevels, 10),
       target: 10,
-      gradient: "from-orange-400 to-amber-600",
-      bgColor: "bg-orange-50",
+      color: "bg-cc-yellow",
     },
     {
       id: 4,
@@ -53,126 +49,81 @@ const AchievementsCard = () => {
       achieved: completedLevels >= 25,
       progress: Math.min(completedLevels, 25),
       target: 25,
-      gradient: "from-purple-400 to-pink-600",
-      bgColor: "bg-purple-50",
+      color: "bg-cc-pink",
     }
   ];
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1 },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, x: -20 },
-    visible: { opacity: 1, x: 0 },
-  };
-
   return (
-    <motion.div
-      className="relative"
-      style={{ perspective: '1000px' }}
-    >
-      {/* Glow effect */}
-      <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/10 to-amber-400/10 rounded-3xl blur-xl transform translate-y-2 scale-95" />
-      
-      <Card className="relative rounded-3xl shadow-lg border-border/50 overflow-hidden">
-        {/* Background decorations */}
-        <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-400/5 rounded-full blur-2xl" />
-        
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-3">
-            <motion.div
-              className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-xl flex items-center justify-center shadow-lg"
-              animate={{ rotateY: [0, 360] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-            >
-              <Trophy className="h-5 w-5 text-white" />
-            </motion.div>
-            <span className="text-lg font-bold">Achievements</span>
-          </CardTitle>
-        </CardHeader>
-        
-        <CardContent>
-          <motion.div 
-            className="space-y-3"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
+    <DrawnCard className="bg-white p-6 sm:p-8 font-draw">
+      <div className="flex items-center gap-4 mb-8">
+        <motion.div
+          className="w-14 h-14 bg-cc-yellow border-3 border-black rounded-2xl flex items-center justify-center shadow-comic-sm"
+          animate={{ rotate: [0, 5, -5, 0] }}
+          transition={{ duration: 4, repeat: Infinity }}
+        >
+          <Trophy className="h-8 w-8 text-black" strokeWidth={3} />
+        </motion.div>
+        <div>
+          <h2 className="text-3xl font-black text-black uppercase tracking-tighter italic leading-none">Achievements</h2>
+          <p className="text-sm font-bold text-black/40 uppercase tracking-widest">Your Coding Legacy</p>
+        </div>
+      </div>
+
+      <div className="grid gap-4">
+        {achievements.map((achievement, index) => (
+          <motion.div
+            key={achievement.id}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.1 }}
+            className={`group relative flex items-center justify-between p-4 rounded-2xl border-3 border-black transform transition-all active:animate-squishy ${achievement.achieved ? achievement.color : 'bg-black/5 opacity-60 grayscale shadow-none border-dashed'
+              } shadow-comic-sm hover:shadow-comic hover:-translate-y-1`}
           >
-            {achievements.map((achievement, index) => (
-              <motion.div 
-                key={achievement.id} 
-                variants={itemVariants}
-                whileHover={{ scale: 1.02, x: 4 }}
-                className={`relative flex items-center justify-between p-3 rounded-2xl transition-all ${
-                  achievement.achieved 
-                    ? `${achievement.bgColor} border border-transparent` 
-                    : 'bg-secondary/30 border border-border/30'
-                }`}
-              >
-                {/* Progress bar background */}
-                <div 
-                  className={`absolute inset-0 rounded-2xl overflow-hidden ${
-                    achievement.achieved ? 'opacity-0' : 'opacity-100'
-                  }`}
+            <div className="flex items-center gap-4">
+              <div className={`w-12 h-12 rounded-xl border-2 border-black flex items-center justify-center bg-white shadow-comic-sm`}>
+                <achievement.icon className="h-6 w-6 text-black" strokeWidth={3} />
+              </div>
+              <div className="text-left">
+                <h4 className="text-lg font-black text-black uppercase tracking-tight leading-none mb-1">
+                  {achievement.title}
+                </h4>
+                <p className="text-[10px] font-bold text-black/50 uppercase tracking-tighter leading-none">
+                  {achievement.description}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col items-end">
+              <div className="text-xs font-black text-black uppercase tracking-tight">
+                {achievement.progress}/{achievement.target}
+              </div>
+              {achievement.achieved && (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="bg-black rounded-full p-0.5"
                 >
-                  <motion.div
-                    className={`h-full bg-gradient-to-r ${achievement.gradient} opacity-10`}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${(achievement.progress / achievement.target) * 100}%` }}
-                    transition={{ duration: 1, delay: index * 0.1 }}
-                  />
-                </div>
-                
-                <div className="relative flex items-center gap-3">
-                  <motion.div
-                    className={`w-10 h-10 bg-gradient-to-br ${achievement.gradient} rounded-xl flex items-center justify-center shadow-md ${
-                      !achievement.achieved && 'opacity-50 grayscale'
-                    }`}
-                    animate={achievement.achieved ? { 
-                      scale: [1, 1.1, 1],
-                      rotate: [0, 5, -5, 0]
-                    } : {}}
-                    transition={{ duration: 2, repeat: Infinity, delay: index * 0.5 }}
-                  >
-                    <achievement.icon className="h-5 w-5 text-white" />
-                  </motion.div>
-                  <div>
-                    <h4 className={`font-semibold text-sm ${
-                      achievement.achieved ? 'text-foreground' : 'text-muted-foreground'
-                    }`}>
-                      {achievement.title}
-                    </h4>
-                    <p className="text-xs text-muted-foreground">{achievement.description}</p>
-                  </div>
-                </div>
-                
-                <div className="relative flex items-center gap-2">
-                  <span className={`text-sm font-medium ${
-                    achievement.achieved ? 'text-primary' : 'text-muted-foreground'
-                  }`}>
-                    {achievement.progress}/{achievement.target}
-                  </span>
-                  {achievement.achieved && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", stiffness: 300 }}
-                    >
-                      <CheckCircle2 className="h-5 w-5 text-green-500" />
-                    </motion.div>
-                  )}
-                </div>
-              </motion.div>
-            ))}
+                  <CheckCircle2 className="h-4 w-4 text-cc-green" strokeWidth={4} />
+                </motion.div>
+              )}
+            </div>
           </motion.div>
-        </CardContent>
-      </Card>
-    </motion.div>
+        ))}
+      </div>
+
+      {/* Mascot Insight */}
+      <div className="mt-8 pt-8 border-t-3 border-black border-dashed flex items-center gap-4">
+        <div className="w-16 h-16 rounded-2xl border-3 border-black flex-shrink-0 bg-cc-blue shadow-comic-sm overflow-hidden flex items-center justify-center">
+          <ComicMascot pose="study" size="sm" className="scale-125" />
+        </div>
+        <div className="bg-white border-2 border-black p-3 rounded-2xl shadow-comic-sm relative">
+          <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-l-2 border-b-2 border-black rotate-45" />
+          <p className="text-xs font-bold text-black italic">
+            "Keep coding! Every level brings you closer to being a Master!"
+          </p>
+        </div>
+      </div>
+    </DrawnCard>
   );
 };
 

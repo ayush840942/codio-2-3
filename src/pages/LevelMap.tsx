@@ -1,52 +1,34 @@
-
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useGame } from '@/context/GameContext';
-import { useIsMobile } from '@/hooks/use-mobile';
 import SimpleLevelMap from '@/components/level-map/SimpleLevelMap';
-import LoadingPage from '@/pages/LoadingPage';
-import ResponsivePuzzleLayout from '@/components/ResponsivePuzzleLayout';
 
 const LevelMap = () => {
   const { gameState, canAccessLevel } = useGame();
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, []);
 
   const handlePlayLevel = (levelId: number) => {
-    // Navigate to puzzle page regardless of access
-    // The Puzzle page itself will handle the "Upgrade Required" screen if needed
     navigate(`/puzzle/${levelId}`);
   };
-
-  if (isLoading) {
-    return <LoadingPage message="Loading levels..." />;
-  }
 
   const levels = gameState.levels || [];
 
   return (
-    <ResponsivePuzzleLayout>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-        className="w-full"
-      >
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      className="w-full"
+    >
+      <div className="bg-[#FDFBF7] min-h-[100dvh] pb-24 border-none border-0 m-0 p-0 shadow-none ring-0 outline-none block w-full absolute top-0 left-0 pt-[var(--safe-area-top)] pr-[var(--safe-area-right)] pl-[var(--safe-area-left)] pb-[var(--safe-area-bottom)] box-border">
         <SimpleLevelMap
           levels={levels}
           canAccessLevel={canAccessLevel}
           onPlayLevel={handlePlayLevel}
         />
-      </motion.div>
-    </ResponsivePuzzleLayout>
+      </div>
+    </motion.div>
   );
 };
 

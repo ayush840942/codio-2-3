@@ -43,7 +43,7 @@ async function createRazorpayOrder(amount: number, currency: string, receipt: st
 
     console.log("🔑 Creating Razorpay order with credentials");
     const credentials = btoa(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`);
-    
+
     const orderData = {
       amount: amount,
       currency: currency,
@@ -52,12 +52,12 @@ async function createRazorpayOrder(amount: number, currency: string, receipt: st
       payment_capture: 1
     };
 
-    console.log('📝 Order data prepared:', { 
-      amount: orderData.amount, 
-      currency: orderData.currency, 
-      receipt: orderData.receipt 
+    console.log('📝 Order data prepared:', {
+      amount: orderData.amount,
+      currency: orderData.currency,
+      receipt: orderData.receipt
     });
-    
+
     const response = await fetch('https://api.razorpay.com/v1/orders', {
       method: 'POST',
       headers: {
@@ -69,10 +69,10 @@ async function createRazorpayOrder(amount: number, currency: string, receipt: st
 
     const responseText = await response.text();
     console.log('🌐 Razorpay API response status:', response.status);
-    
+
     if (!response.ok) {
       console.error('❌ Razorpay API error:', response.status, responseText);
-      
+
       // Parse error for better user feedback
       let errorMessage = 'Payment service error';
       try {
@@ -81,7 +81,7 @@ async function createRazorpayOrder(amount: number, currency: string, receipt: st
       } catch {
         errorMessage = `HTTP ${response.status}: ${responseText}`;
       }
-      
+
       throw new Error(`Razorpay API error: ${errorMessage}`);
     }
 
@@ -103,7 +103,7 @@ serve(async (req) => {
 
   try {
     console.log("🚀 Razorpay payment order creation started");
-    
+
     // Parse request body
     let requestBody;
     try {
@@ -115,11 +115,11 @@ serve(async (req) => {
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
       );
     }
-    
-    const { amount, currency = "INR", receipt, notes } = requestBody;
-    
-    console.log("📋 Request parameters:", { amount, currency, receipt });
-    
+
+    const { amount, currency = "USD", receipt, notes } = requestBody;
+
+    console.log(`🌍 International Order Creation: ${amount} ${currency} (Receipt: ${receipt || 'autogen'})`);
+
     // Validate amount
     if (!amount || typeof amount !== 'number' || amount <= 0) {
       console.error("❌ Invalid amount:", amount);
@@ -129,11 +129,11 @@ serve(async (req) => {
       );
     }
 
-    // Validate amount is in paise (minimum 100 paise = 1 INR)
+    // Validate amount is in cents (minimum 100 cents = 1 USD)
     if (amount < 100) {
       console.error("❌ Amount too small:", amount);
       return new Response(
-        JSON.stringify({ error: "Amount must be at least 100 paise (1 INR)", success: false }),
+        JSON.stringify({ error: "Amount must be at least 100 cents (1 USD)", success: false }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
       );
     }
@@ -146,19 +146,19 @@ serve(async (req) => {
     // Create real Razorpay order
     try {
       orderData = await createRazorpayOrder(
-        amount, 
-        currency, 
-        receipt || generateOrderId(), 
+        amount,
+        currency,
+        receipt || generateOrderId(),
         notes || {}
       );
       orderId = orderData.id;
       console.log('✅ Razorpay order created successfully:', orderId);
     } catch (razorpayError) {
       console.error('💥 Razorpay order creation failed:', razorpayError);
-      
+
       const errorMessage = razorpayError instanceof Error ? razorpayError.message : "Unknown Razorpay error";
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           error: "Payment order creation failed",
           message: errorMessage,
           success: false
@@ -166,7 +166,7 @@ serve(async (req) => {
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
       );
     }
-    
+
     // Store order details in database for tracking
     try {
       const { error: dbError } = await supabase
@@ -191,8 +191,8 @@ serve(async (req) => {
       console.error("⚠️ Database operation warning:", dbError);
       // Don't fail the request if database storage fails
     }
-    
-    const successResponse = { 
+
+    const successResponse = {
       order_id: orderId,
       amount: amount,
       currency: currency,
@@ -200,21 +200,21 @@ serve(async (req) => {
       status: orderData.status || "created",
       success: true
     };
-    
+
     console.log("🎉 Payment order creation completed successfully");
-    
+
     return new Response(
       JSON.stringify(successResponse),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
-    
+
   } catch (error) {
     console.error("💥 Unexpected error processing request:", error);
-    
+
     const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
-    
+
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: "Payment initialization failed",
         message: errorMessage,
         success: false

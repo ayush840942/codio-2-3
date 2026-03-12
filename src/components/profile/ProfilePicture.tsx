@@ -1,9 +1,11 @@
 
 import React, { useState } from 'react';
-import { Camera, User } from 'lucide-react';
+import { Camera as CameraIcon, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { Capacitor } from '@capacitor/core';
 
 interface ProfilePictureProps {
   profilePicture?: string;
@@ -26,31 +28,64 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({
     lg: 'h-32 w-32'
   };
 
-  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  // Check if running on mobile natively
+  const isNative = Capacitor.isNativePlatform();
+
+  const handleFileSelect = async (event: any) => {
+    const file = event.target?.files?.[0] || event.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       toast.error('Please select an image file');
       return;
     }
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size should be less than 5MB');
+      toast.error('Image too large (max 5MB)');
       return;
     }
 
     setIsUploading(true);
     try {
       if (onProfilePictureChange) {
-        await onProfilePictureChange(file); // Await the upload function
-        toast.success('Profile picture updated successfully!');
+        await onProfilePictureChange(file);
       }
     } catch (error) {
       console.error('Upload error:', error);
-      toast.error('Failed to upload profile picture');
+      toast.error('Failed to update profile picture');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleCameraCapture = async () => {
+    try {
+      const image = await Camera.getPhoto({
+        quality: 80,
+        allowEditing: true,
+        resultType: CameraResultType.Uri,
+        source: CameraSource.Prompt,
+      });
+
+      if (!image.webPath) {
+        toast.error('Failed to get image path');
+        return;
+      }
+
+      setIsUploading(true);
+
+      const response = await fetch(image.webPath);
+      const blob = await response.blob();
+      const file = new File([blob], `profile_${Date.now()}.jpg`, { type: 'image/jpeg' });
+
+      if (onProfilePictureChange) {
+        await onProfilePictureChange(file);
+      }
+    } catch (error: any) {
+      console.error('Camera error:', error);
+      if (!error.message?.includes('cancelled')) {
+        toast.error('Camera capture failed');
+      }
     } finally {
       setIsUploading(false);
     }
@@ -60,7 +95,6 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    input.capture = 'environment'; // This enables camera on mobile
     input.style.display = 'none';
 
     input.onchange = (e) => {
@@ -75,23 +109,33 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({
     document.body.removeChild(input);
   };
 
+  const handlePhotoUpload = () => {
+    if (isNative) {
+      // Use Capacitor Camera API on mobile
+      handleCameraCapture();
+    } else {
+      // Use file input on web
+      triggerFileInput();
+    }
+  };
+
   return (
     <div className="relative">
-      <Avatar className={`${sizeClasses[size]} relative`}>
-        <AvatarImage src={profilePicture} alt="Profile" />
-        <AvatarFallback>
-          <User className="w-1/2 h-1/2" />
+      <Avatar className={`${sizeClasses[size]} relative border-3 border-black shadow-comic-lg bg-white overflow-hidden`}>
+        <AvatarImage src={profilePicture} alt="Profile" className="object-cover" />
+        <AvatarFallback className="bg-pastel-yellow/20">
+          <User className="w-1/2 h-1/2 text-black/20" />
         </AvatarFallback>
       </Avatar>
 
       {editable && (
         <Button
-          onClick={triggerFileInput}
+          onClick={handlePhotoUpload}
           disabled={isUploading}
           size="sm"
-          className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0 bg-blue-600 hover:bg-blue-700"
+          className="absolute -bottom-2 -right-2 h-10 w-10 rounded-full p-0 bg-white hover:bg-gray-100 border-2 border-black shadow-comic"
         >
-          <Camera className="w-4 h-4" />
+          <CameraIcon className="w-5 h-5 text-black" strokeWidth={3} />
         </Button>
       )}
     </div>

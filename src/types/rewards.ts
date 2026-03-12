@@ -17,6 +17,8 @@ export interface UserRewards {
   freeHintDays: number;
   trialStartDate: string | null;
   isTrialActive: boolean;
+  weeklyXp: number;
+  league: 'Bronze' | 'Silver' | 'Gold' | 'Platinum' | 'Diamond';
 }
 
 // Export Rewards as an alias for UserRewards for backward compatibility
@@ -25,8 +27,8 @@ export type Rewards = UserRewards;
 export interface RewardsContextType {
   rewards: UserRewards;
   setRewards: (rewards: UserRewards) => void;
-  addXP: (amount: number) => Promise<void>;
-  addCoins: (amount: number) => Promise<void>;
+  addXP: (amount: number) => Promise<boolean>;
+  addCoins: (amount: number) => Promise<boolean>;
   addHints: (amount: number) => Promise<void>;
   useHint: () => Promise<boolean>;
   useHints: (amount: number) => Promise<boolean>;

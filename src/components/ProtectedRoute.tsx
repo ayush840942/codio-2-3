@@ -21,6 +21,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const { user, loading, initializing, isSubscribed, subscriptionTier } = useAuth();
   const { hasFeature } = useSubscriptionFeatures();
 
+  const isAdmin = localStorage.getItem('admin_authenticated') === 'true';
+
   // Distinguish between a real authenticated user and a guest user
   const isRealUser = user && user.app_metadata?.provider !== 'guest' && user.app_metadata?.provider !== undefined;
   const isGuestModeLocal = localStorage.getItem('codio_guest_mode') === 'true';
@@ -28,8 +30,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const isGuest = isGuestModeLocal || isGuestUser;
 
   // Only show the app-wide loading screen on initial initialization
-  if (initializing) {
+  if (initializing && !isAdmin) {
     return <AppLoadingScreen message="Authenticating..." />;
+  }
+
+  // Always allow admin
+  if (isAdmin) {
+    return <>{children}</>;
   }
 
   // Check feature restrictions if a key is provided

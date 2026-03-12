@@ -1,9 +1,9 @@
-
 import { useState, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { UserRewards } from '@/types/rewards';
 import { calculateTrialStatus } from '@/utils/trialUtils';
+import { toDatabaseId } from '@/utils/idMapping';
 
 export const useRewardsLoader = () => {
   const { user } = useAuth();
@@ -17,6 +17,7 @@ export const useRewardsLoader = () => {
 
       // Save to localStorage as backup
       const storageKey = `codio_rewards_${user.id}`;
+      const dbId = toDatabaseId(user.id);
       const existingLocal = localStorage.getItem(storageKey);
       const localData = existingLocal ? JSON.parse(existingLocal) : {};
 
@@ -32,7 +33,7 @@ export const useRewardsLoader = () => {
           ...updates,
           updated_at: new Date().toISOString()
         })
-        .eq('user_id', user.id);
+        .eq('user_id', dbId);
 
       if (error) {
         console.error('Error updating rewards in database:', error);
@@ -68,10 +69,11 @@ export const useRewardsLoader = () => {
       }
 
       // 2. Load from database
+      const dbId = toDatabaseId(user.id);
       const { data, error } = await supabase
         .from('user_rewards')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', dbId)
         .single();
 
       if (error) {
@@ -79,7 +81,7 @@ export const useRewardsLoader = () => {
 
         if (localData) {
           console.log('Falling back to local data');
-          const trialStatus = calculateTrialStatus(localData.trial_start_date || new Date().toISOString(), user.created_at);
+          const trialStatus = calculateTrialStatus(localData.trial_start_date || new Date().toISOString(), user.createdAt);
           setRewards({
             xp: localData.xp || 0,
             coins: localData.coins || 0,
@@ -96,14 +98,15 @@ export const useRewardsLoader = () => {
             hintPointsSpent: localData.hintPointsSpent || 0,
             trialStartDate: localData.trial_start_date || null,
             isTrialActive: localData.isTrialActive || false,
+            weeklyXp: localData.weeklyXp || 0,
+            league: localData.league || 'Bronze',
             ...trialStatus
           });
           return;
         }
 
-        // Create initial rewards if none exist and no local data
         const initialRewards = {
-          user_id: user.id,
+          user_id: dbId,
           hint_points: 50,
           login_streak: 0,
           last_claim_date: null,
@@ -118,7 +121,7 @@ export const useRewardsLoader = () => {
           console.error('Error creating initial rewards:', insertError);
         }
 
-        const trialStatus = calculateTrialStatus(initialRewards.trial_start_date, user.created_at);
+        const trialStatus = calculateTrialStatus(initialRewards.trial_start_date, user.createdAt);
         setRewards({
           xp: 0,
           coins: 0,
@@ -135,6 +138,8 @@ export const useRewardsLoader = () => {
           hintPointsSpent: 0,
           trialStartDate: initialRewards.trial_start_date,
           isTrialActive: false,
+          weeklyXp: 0,
+          league: 'Bronze',
           ...trialStatus
         });
         return;
@@ -142,27 +147,30 @@ export const useRewardsLoader = () => {
 
       if (data) {
         console.log('Loaded rewards from database:', data);
-        const trialStatus = calculateTrialStatus(data.trial_start_date, user.created_at);
-
-        // Merge DB data with local data (local data might have more recent xp/coins)
+        const trialStatus = calculateTrialStatus(data.trial_start_date, user.createdAt);
         setRewards({
-          xp: localData?.xp || 0,
-          coins: localData?.coins || 0,
-          streak: data.login_streak || localData?.streak || 0,
-          loginStreak: data.login_streak || localData?.loginStreak || 0,
-          dailyStreak: data.login_streak || localData?.dailyStreak || 0,
-          badges: localData?.badges || [],
+          xp: data.xp || 0,
+          coins: data.coins || 0,
+          streak: data.streak || 0,
+          loginStreak: data.login_streak || 0,
+          dailyStreak: data.daily_streak || 0,
+          badges: data.badges || [],
           hintPoints: data.hint_points || 0,
-          lastClaimDate: data.last_claim_date,
-          freeHintDays: Math.max(0, 30 - Math.floor((Date.now() - new Date(data.trial_start_date || user.created_at || Date.now()).getTime()) / (1000 * 60 * 60 * 24))),
-          totalXpEarned: localData?.totalXpEarned || 0,
-          levelsCompleted: localData?.levelsCompleted || 0,
-          perfectSolutions: localData?.perfectSolutions || 0,
-          hintPointsSpent: localData?.hintPointsSpent || 0,
-          trialStartDate: data.trial_start_date,
-          isTrialActive: false, // Default will be updated by trialStatus
+          lastClaimDate: data.last_claim_date || null,
+          freeHintDays: data.free_hint_days || 0,
+          totalXpEarned: data.total_xp_earned || 0,
+          levelsCompleted: data.levels_completed || 0,
+          perfectSolutions: data.perfect_solutions || 0,
+          hintPointsSpent: data.hint_points_spent || 0,
+          trialStartDate: data.trial_start_date || null,
+          isTrialActive: data.is_trial_active || false,
+          weeklyXp: data.weekly_xp || 0,
+          league: data.league || 'Bronze',
           ...trialStatus
         });
+
+        // Update local storage with fresh DB data
+        localStorage.setItem(storageKey, JSON.stringify(data));
       }
     } catch (error) {
       console.error('Error in loadRewards:', error);
@@ -171,11 +179,5 @@ export const useRewardsLoader = () => {
     }
   }, [user]);
 
-  return {
-    loading,
-    setLoading,
-    updateRewardsInDB,
-    loadRewards
-  };
+  return { loading, setLoading, updateRewardsInDB, loadRewards };
 };
-

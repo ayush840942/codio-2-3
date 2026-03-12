@@ -5,6 +5,7 @@ import { useRewards } from '@/context/RewardsContext';
 import { supabase } from '@/integrations/supabase/client';
 import { ReferralStats } from '@/types/referral';
 import { toast } from 'sonner';
+import { toDatabaseId } from '@/utils/idMapping';
 
 export const useReferralSystem = () => {
   const { user } = useAuth();
@@ -42,10 +43,11 @@ export const useReferralSystem = () => {
       console.log('Initializing referral code for user:', user.id);
 
       // Check if user already has a referral code
+      const dbUserId = toDatabaseId(user.id);
       const { data: existingCode, error: checkError } = await supabase
         .from('user_referrals')
         .select('referral_code')
-        .eq('user_id', user.id)
+        .eq('user_id', dbUserId)
         .maybeSingle();
 
       if (checkError) {
@@ -65,7 +67,7 @@ export const useReferralSystem = () => {
       const { data, error: insertError } = await supabase
         .from('user_referrals')
         .insert({
-          user_id: user.id,
+          user_id: dbUserId,
           referral_code: newCode,
           total_referrals: 0,
           completed_referrals: 0,
@@ -82,7 +84,7 @@ export const useReferralSystem = () => {
           const { data: retryData } = await supabase
             .from('user_referrals')
             .select('referral_code')
-            .eq('user_id', user.id)
+            .eq('user_id', dbUserId)
             .single();
           return retryData?.referral_code || null;
         }
@@ -118,6 +120,7 @@ export const useReferralSystem = () => {
       }
 
       // Get user referral data with retry logic
+      const dbUserId = toDatabaseId(user.id);
       let userReferrals = null;
       let attempts = 0;
 
@@ -125,7 +128,7 @@ export const useReferralSystem = () => {
         const { data, error: userError } = await supabase
           .from('user_referrals')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('user_id', dbUserId)
           .maybeSingle();
 
         if (userError) {
@@ -156,7 +159,7 @@ export const useReferralSystem = () => {
       const { data: referrals, error: referralsError } = await supabase
         .from('referrals')
         .select('*')
-        .eq('referrer_user_id', user.id);
+        .eq('referrer_user_id', dbUserId);
 
       if (referralsError) {
         console.error('Error loading referrals:', referralsError);
@@ -234,10 +237,11 @@ export const useReferralSystem = () => {
       }
 
       // Check if user already used a referral code
+      const dbUserId = toDatabaseId(user.id);
       const { data: existingReferral, error: existingError } = await supabase
         .from('referrals')
         .select('id')
-        .eq('referred_user_id', user.id)
+        .eq('referred_user_id', dbUserId)
         .maybeSingle();
 
       if (existingError && existingError.code !== 'PGRST116') {
@@ -256,7 +260,7 @@ export const useReferralSystem = () => {
         .from('referrals')
         .insert({
           referrer_user_id: referrer.user_id,
-          referred_user_id: user.id,
+          referred_user_id: dbUserId,
           referral_code: cleanCode,
           status: 'pending',
           bonus_xp: 100,
@@ -292,7 +296,7 @@ export const useReferralSystem = () => {
       const { data: referral, error: referralError } = await supabase
         .from('referrals')
         .select('*')
-        .eq('referred_user_id', referredUserId)
+        .eq('referred_user_id', toDatabaseId(referredUserId))
         .eq('status', 'pending')
         .maybeSingle();
 
@@ -320,7 +324,7 @@ export const useReferralSystem = () => {
         const { data: referrerData, error: referrerError } = await supabase
           .from('user_referrals')
           .select('*')
-          .eq('user_id', referral.referrer_user_id)
+          .eq('user_id', toDatabaseId(referral.referrer_user_id))
           .maybeSingle();
 
         if (referrerError) {
@@ -336,7 +340,7 @@ export const useReferralSystem = () => {
               total_xp_earned: (referrerData.total_xp_earned || 0) + referral.bonus_xp,
               total_coins_earned: (referrerData.total_coins_earned || 0) + referral.bonus_coins
             })
-            .eq('user_id', referral.referrer_user_id);
+            .eq('user_id', toDatabaseId(referral.referrer_user_id));
 
           if (statsError) {
             console.error('Error updating referrer stats:', statsError);

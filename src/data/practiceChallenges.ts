@@ -189,7 +189,79 @@ export const practiceChallenges: PracticeChallenge[] = [
     difficulty: 'medium',
     starterCode: '/* Default styles */\nbody {\n  background-color: white;\n}\n\n/* Add a media query for screens under 768px */\n/* Change background to lightblue */\n\n/* Your code here */',
     hint: 'Use @media (max-width: 768px) { } to target mobile devices.',
-    solution: 'body {\n  background-color: white;\n}\n\n@media (max-width: 768px) {\n  body {\n    background-color: lightblue;\n  }\n}'
+    solution: '@media (max-width: 768px) {\n  body {\n    background-color: lightblue;\n  }\n}'
+  },
+
+  // NEW: Kotlin Challenges
+  {
+    id: 'kotlin-1',
+    language: 'Kotlin',
+    title: 'Kotlin Hello',
+    description: 'Print "Hello, Kotlin!" using the main function.',
+    difficulty: 'easy',
+    starterCode: 'fun main() {\n    // Your code here\n}',
+    expectedOutput: 'Hello, Kotlin!',
+    hint: 'Use the println() function.',
+    solution: 'fun main() {\n    println("Hello, Kotlin!")\n}'
+  },
+  {
+    id: 'kotlin-2',
+    language: 'Kotlin',
+    title: 'Variables',
+    description: 'Declare a constant named "name" with value "Codio" and print it.',
+    difficulty: 'easy',
+    starterCode: 'fun main() {\n    // Declare name here\n    println(name)\n}',
+    expectedOutput: 'Codio',
+    hint: 'Use "val" for constants in Kotlin.',
+    solution: 'fun main() {\n    val name = "Codio"\n    println(name)\n}'
+  },
+
+  // NEW: Swift Challenges
+  {
+    id: 'swift-1',
+    language: 'Swift',
+    title: 'Swift Greet',
+    description: 'Print "Hello, Swift!" to the console.',
+    difficulty: 'easy',
+    starterCode: '// Your Swift code here',
+    expectedOutput: 'Hello, Swift!',
+    hint: 'Use the print() function. No main function needed in top-level Swift.',
+    solution: 'print("Hello, Swift!")'
+  },
+  {
+    id: 'swift-2',
+    language: 'Swift',
+    title: 'Swift Arrays',
+    description: 'Create an array of numbers [1, 2, 3] and print its count.',
+    difficulty: 'medium',
+    starterCode: 'let numbers = // Your code here\nprint(numbers.count)',
+    expectedOutput: '3',
+    hint: 'Declare an array using brackets: [1, 2, 3]',
+    solution: 'let numbers = [1, 2, 3]\nprint(numbers.count)'
+  },
+
+  // NEW: Flutter/Dart Challenges
+  {
+    id: 'flutter-1',
+    language: 'Flutter',
+    title: 'Dart Main',
+    description: 'Print "Hello from Flutter!" in the main function.',
+    difficulty: 'easy',
+    starterCode: 'void main() {\n  // Your code here\n}',
+    expectedOutput: 'Hello from Flutter!',
+    hint: 'Use the print() function inside main().',
+    solution: 'void main() {\n  print("Hello from Flutter!");\n}'
+  },
+  {
+    id: 'flutter-2',
+    language: 'Flutter',
+    title: 'Class Basics',
+    description: 'Create a simple Dart class named "Robot" and instantiate it.',
+    difficulty: 'medium',
+    starterCode: 'class Robot {\n  // Your code here\n}\n\nvoid main() {\n  var r = Robot();\n  print("Robot created");\n}',
+    expectedOutput: 'Robot created',
+    hint: 'Define a class using the "class" keyword.',
+    solution: 'class Robot {}\n\nvoid main() {\n  var r = Robot();\n  print("Robot created");\n}'
   }
 ];
 

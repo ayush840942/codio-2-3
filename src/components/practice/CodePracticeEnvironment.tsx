@@ -47,7 +47,7 @@ const CodePracticeEnvironment: React.FC<CodePracticeEnvironmentProps> = ({
 
     try {
       const logs: string[] = [];
-      
+
       // Create mock console
       const mockConsole = {
         log: (...args: any[]) => {
@@ -71,6 +71,8 @@ const CodePracticeEnvironment: React.FC<CodePracticeEnvironmentProps> = ({
         }
       };
 
+      let finalOutput = '';
+
       // Handle different languages
       if (language === 'JavaScript' || language === 'TypeScript') {
         const safeCode = code.replace(/console\.(log|error|warn)/g, 'mockConsole.$1');
@@ -82,22 +84,23 @@ const CodePracticeEnvironment: React.FC<CodePracticeEnvironmentProps> = ({
           }
         `);
         executeFunction(mockConsole);
-        setOutput(logs.join('\n') || 'Code executed successfully (no output)');
+        finalOutput = logs.join('\n') || 'Code executed successfully (no output)';
       } else if (language === 'Python') {
         // Simulate Python execution
-        const pythonOutput = simulatePythonExecution(code);
-        setOutput(pythonOutput);
+        finalOutput = simulatePythonExecution(code);
       } else if (language === 'HTML' || language === 'CSS') {
-        setOutput('Preview rendered below:\n\n' + code);
+        finalOutput = 'Preview rendered below:\n\n' + code;
       } else if (language === 'React') {
-        setOutput('React component rendered:\n\n' + code);
+        finalOutput = 'React component rendered:\n\n' + code;
       } else {
-        setOutput(`Code ready for ${language}:\n\n${code}`);
+        finalOutput = `Code ready for ${language}:\n\n${code}`;
       }
 
-      if (challenge?.expectedOutput && output.includes(challenge.expectedOutput)) {
+      setOutput(finalOutput);
+
+      if (challenge?.expectedOutput && finalOutput.includes(challenge.expectedOutput)) {
         toast.success('Correct! Your output matches the expected result.');
-        onComplete?.(code, output);
+        onComplete?.(code, finalOutput);
       }
     } catch (error: any) {
       setOutput(`Error: ${error.message}`);
@@ -109,10 +112,10 @@ const CodePracticeEnvironment: React.FC<CodePracticeEnvironmentProps> = ({
   const simulatePythonExecution = (pythonCode: string): string => {
     const outputs: string[] = [];
     const lines = pythonCode.split('\n');
-    
+
     lines.forEach(line => {
       const trimmed = line.trim();
-      
+
       // Handle print statements
       const printMatch = trimmed.match(/print\((.+)\)/);
       if (printMatch) {
@@ -123,15 +126,15 @@ const CodePracticeEnvironment: React.FC<CodePracticeEnvironmentProps> = ({
         content = content.replace(/f["'](.+)["']/g, '$1');
         outputs.push(content);
       }
-      
+
       // Handle basic variable assignments and expressions
       if (trimmed.includes('=') && !trimmed.startsWith('#')) {
         // Variable assignment - just note it
       }
     });
 
-    return outputs.length > 0 
-      ? outputs.join('\n') 
+    return outputs.length > 0
+      ? outputs.join('\n')
       : 'Code executed successfully (no print output)';
   };
 
@@ -225,7 +228,7 @@ const CodePracticeEnvironment: React.FC<CodePracticeEnvironmentProps> = ({
             </>
           )}
         </Button>
-        
+
         {challenge?.hint && !showHint && (
           <Button
             variant="outline"
@@ -275,12 +278,12 @@ const CodePracticeEnvironment: React.FC<CodePracticeEnvironmentProps> = ({
             <CardTitle className="text-sm">Live Preview</CardTitle>
           </CardHeader>
           <CardContent className="p-3">
-            <div 
+            <div
               className="border rounded-lg p-4 bg-white min-h-[150px]"
-              dangerouslySetInnerHTML={{ 
-                __html: language === 'CSS' 
+              dangerouslySetInnerHTML={{
+                __html: language === 'CSS'
                   ? `<style>${code}</style><div class="preview">Preview with your styles</div>`
-                  : code 
+                  : code
               }}
             />
           </CardContent>

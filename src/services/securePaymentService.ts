@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { validatePlan, validateMetadata } from '@/utils/inputValidation';
 import { Plan } from '@/types/subscription';
 import { User } from '@supabase/supabase-js';
+import { toDatabaseId } from '@/utils/idMapping';
 
 interface PaymentMetadata {
   type?: string;
@@ -11,9 +12,15 @@ interface PaymentMetadata {
   [key: string]: any;
 }
 
-export const createSecureOrder = async (plan: Plan, metadata: PaymentMetadata = {}) => {
+export const createSecureOrder = async (user: User, plan: Plan, metadata: PaymentMetadata = {}, currency: string = 'USD', amountInSubunits?: number) => {
   try {
-    console.log('Creating secure order with plan:', plan, 'metadata:', metadata);
+    // Determine the final integer amount for the database (subunits, e.g., cents/paise)
+    // If amountInSubunits is provided, use it. Otherwise, convert plan.price (major units) to subunits.
+    const finalAmountInteger = amountInSubunits !== undefined
+      ? Math.round(amountInSubunits)
+      : Math.round(plan.price * 100);
+
+    console.log('Creating secure order for user:', user.email, 'plan:', plan.id, 'metadata:', metadata, 'currency:', currency, 'amount:', finalAmountInteger);
 
     // Validate plan data
     const planValidation = validatePlan(plan);
@@ -27,19 +34,19 @@ export const createSecureOrder = async (plan: Plan, metadata: PaymentMetadata = 
       throw new Error(metadataValidation.error);
     }
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
+    if (!user) {
       throw new Error('User not authenticated');
     }
 
-    // Create order in database
+    // Create order in database - Ensure amount is strictly an integer
+    const dbUserId = toDatabaseId(user.id);
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .insert({
-        user_id: user.id,
+        user_id: dbUserId,
         plan_id: plan.id,
-        amount: plan.price,
-        currency: 'INR',
+        amount: finalAmountInteger, // Corrected: Storing as integer subunits 
+        currency: currency,
         status: 'pending',
         metadata: metadata as any
       })
@@ -48,7 +55,7 @@ export const createSecureOrder = async (plan: Plan, metadata: PaymentMetadata = 
 
     if (orderError) {
       console.error('Database error creating order:', orderError);
-      throw new Error('Failed to create order');
+      throw new Error(`Failed to create order: ${orderError.message || 'Database integer mismatch'}`);
     }
 
     console.log('Order created successfully:', order);
@@ -60,21 +67,21 @@ export const createSecureOrder = async (plan: Plan, metadata: PaymentMetadata = 
   }
 };
 
-export const processSecurePayment = async (orderId: string, paymentId: string) => {
+export const processSecurePayment = async (user: User, orderId: string, paymentId: string) => {
   try {
-    console.log('Processing secure payment for order:', orderId, 'payment:', paymentId);
+    console.log('Processing secure payment for user:', user.id, 'order:', orderId, 'payment:', paymentId);
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
+    if (!user) {
       throw new Error('User not authenticated');
     }
 
     // Get the order by primary ID or Razorpay Order ID in metadata
+    const dbUserId = toDatabaseId(user.id);
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .select('*')
       .or(`id.eq.${orderId},metadata->>razorpay_order_id.eq.${orderId}`)
-      .eq('user_id', user.id)
+      .eq('user_id', dbUserId)
       .single();
 
     if (orderError || !order) {
@@ -110,10 +117,11 @@ export const processSecurePayment = async (orderId: string, paymentId: string) =
       }
 
       // Add hint points directly to database
+      const dbUserId = toDatabaseId(user.id);
       const { data: currentRewards, error: rewardsError } = await supabase
         .from('user_rewards')
         .select('hint_points')
-        .eq('user_id', user.id)
+        .eq('user_id', dbUserId)
         .single();
 
       if (rewardsError) {
@@ -126,7 +134,7 @@ export const processSecurePayment = async (orderId: string, paymentId: string) =
       const { error: updateRewardsError } = await supabase
         .from('user_rewards')
         .upsert({
-          user_id: user.id,
+          user_id: dbUserId,
           hint_points: newHintPoints
         });
 
@@ -153,15 +161,16 @@ export const processSecurePayment = async (orderId: string, paymentId: string) =
       const endDate = new Date(startDate.getTime() + durationDays * 24 * 60 * 60 * 1000);
 
       // Update user subscription
+      const dbUserId = toDatabaseId(user.id);
       const { error: subscriptionError } = await supabase
         .from('user_subscriptions')
         .upsert({
-          user_id: user.id,
+          user_id: dbUserId,
           plan_id: order.plan_id,
           status: 'active',
           start_date: startDate.toISOString(),
           end_date: endDate.toISOString(),
-          amount: order.amount
+          amount: order.amount / 100 // Convert subunits back to major units for display/subscription record
         });
 
       if (subscriptionError) {
@@ -173,7 +182,7 @@ export const processSecurePayment = async (orderId: string, paymentId: string) =
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ plan: order.plan_id })
-        .eq('id', user.id);
+        .eq('id', dbUserId);
 
       if (profileError) {
         console.warn('Error updating profile plan during subscription:', profileError);
@@ -210,15 +219,15 @@ export const verifySecurePayment = async (paymentId: string, orderId: string) =>
 };
 
 // Generate order ID function
-export const secureGenerateOrderId = async (amount: number, user: User, metadata?: PaymentMetadata) => {
+export const secureGenerateOrderId = async (amount: number, user: User, metadata?: PaymentMetadata, currency: string = 'USD') => {
   try {
-    console.log('Generating secure order ID for amount:', amount);
+    console.log('Generating secure order ID for amount:', amount, 'currency:', currency);
 
     // Create a temporary plan for the order
     const tempPlan: Plan = {
       id: `temp-${Date.now()}`,
       name: 'Temporary Plan',
-      price: Math.floor(amount / 100), // Convert paise to rupees
+      price: amount / 100,
       period: 'once',
       description: 'Temporary plan for payment',
       features: []
@@ -228,26 +237,30 @@ export const secureGenerateOrderId = async (amount: number, user: User, metadata
     const { data: rzpData, error: rzpError } = await supabase.functions.invoke('razorpay', {
       body: {
         amount,
-        currency: 'INR',
+        currency,
         notes: metadata
       }
     });
 
     if (rzpError || !rzpData?.order_id) {
       console.error('Razorpay order creation failed:', rzpError);
-      throw new Error('Could not initialize payment with Razorpay');
+      throw new Error(`Could not initialize payment with Razorpay: ${rzpError?.message || 'Unknown error'}`);
     }
 
     // Create our internal order record with the real Razorpay Order ID in metadata
-    const order = await createSecureOrder(tempPlan, {
+    // Pass user and amount directly as subunits
+    const order = await createSecureOrder(user, {
+      ...tempPlan,
+      price: amount / 100
+    }, {
       ...metadata,
-      razorpay_order_id: rzpData.order_id
-    });
+      razorpay_order_id: rzpData.order_id,
+      currency
+    }, currency, amount);
 
-    // Return the order data in the expected format for Razorpay Checkout
     return {
       order_id: rzpData.order_id,
-      key_id: rzpData.key_id || 'rzp_live_S6DtyFyJe7iJXx'
+      key_id: rzpData.key_id || 'rzp_live_S6DtyFyJe7iJXx' // Shared Key
     };
 
   } catch (error) {
@@ -266,18 +279,19 @@ export const secureRecordPurchase = async (
   hintAmount?: number
 ) => {
   try {
-    console.log('Recording secure purchase:', { planId, amount, paymentId, orderId, hintAmount });
+    console.log('Recording secure purchase for user:', user.id, { planId, amount, paymentId, orderId, hintAmount });
 
     // Process the payment
-    await processSecurePayment(orderId, paymentId);
+    await processSecurePayment(user, orderId, paymentId);
 
     // Record the purchase
+    const dbUserId = toDatabaseId(user.id);
     const { error: purchaseError } = await supabase
       .from('user_purchases')
       .insert({
-        user_id: user.id,
+        user_id: dbUserId,
         plan_id: planId,
-        amount: amount,
+        amount: Math.round(amount * 100), // Ensure integer in subunits
         payment_id: paymentId,
         order_id: orderId,
         hint_amount: hintAmount || 0

@@ -17,7 +17,7 @@ export const SignInRequired: React.FC<SignInRequiredProps> = ({
     const navigate = useNavigate();
 
     return (
-        <div className="min-h-screen bg-background flex items-center justify-center px-6">
+        <div className="min-h-[100dvh] bg-background flex items-center justify-center px-6">
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}

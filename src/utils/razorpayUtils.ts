@@ -64,14 +64,14 @@ export const loadRazorpayScript = (): Promise<boolean> => {
 };
 
 // Function to generate order ID via Supabase Edge Function
-export const generateOrderId = async (amount: number): Promise<string> => {
+export const generateOrderId = async (amount: number, currency: string = 'USD'): Promise<string> => {
   try {
-    console.log('Generating order ID for amount:', amount);
+    console.log('Generating order ID for amount:', amount, 'currency:', currency);
 
     const { data, error } = await supabase.functions.invoke('razorpay', {
       body: {
         amount: amount,
-        currency: 'INR'
+        currency: currency
       }
     });
 

@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRewards } from '@/context/RewardsContext';
 
 interface RewardSimulationCallbacks {
@@ -17,6 +17,18 @@ export const useRewardSimulation = (callbacks: RewardSimulationCallbacks) => {
   const [rewardAmount, setRewardAmount] = useState(0);
   const [badgeName, setBadgeName] = useState('');
 
+  // Store callbacks in a ref so we don't recreate intervals when they change
+  const callbacksRef = useRef(callbacks);
+  useEffect(() => {
+    callbacksRef.current = callbacks;
+  }, [callbacks]);
+
+  // Read loginStreak from a ref to avoid recreating intervals on streak updates
+  const loginStreakRef = useRef(rewards.loginStreak);
+  useEffect(() => {
+    loginStreakRef.current = rewards.loginStreak;
+  }, [rewards.loginStreak]);
+
   const showReward = (type: 'xp' | 'coin' | 'hint' | 'streak' | 'badge', amount: number) => {
     setRewardType(type);
     setRewardAmount(amount);
@@ -31,7 +43,7 @@ export const useRewardSimulation = (callbacks: RewardSimulationCallbacks) => {
     const gainXP = () => {
       const xpAmount = Math.floor(Math.random() * 50) + 50;
       addXP(xpAmount);
-      callbacks.onXPGain?.(xpAmount);
+      callbacksRef.current.onXPGain?.(xpAmount);
       showReward('xp', xpAmount);
     };
 
@@ -39,7 +51,7 @@ export const useRewardSimulation = (callbacks: RewardSimulationCallbacks) => {
     const gainCoins = () => {
       const coinAmount = Math.floor(Math.random() * 30) + 20;
       addCoins(coinAmount);
-      callbacks.onCoinGain?.(coinAmount);
+      callbacksRef.current.onCoinGain?.(coinAmount);
       showReward('coin', coinAmount);
     };
 
@@ -47,15 +59,15 @@ export const useRewardSimulation = (callbacks: RewardSimulationCallbacks) => {
     const gainHints = () => {
       const hintAmount = Math.floor(Math.random() * 5) + 1;
       addHints(hintAmount);
-      callbacks.onHintGain?.(hintAmount);
+      callbacksRef.current.onHintGain?.(hintAmount);
       showReward('hint', hintAmount);
     };
 
     // Simulate updating streak
     const updateCurrentStreak = () => {
-      const newStreak = rewards.loginStreak + 1;
+      const newStreak = loginStreakRef.current + 1;
       updateStreak();
-      callbacks.onStreakUpdate?.(newStreak);
+      callbacksRef.current.onStreakUpdate?.(newStreak);
       showReward('streak', newStreak);
     };
 
@@ -64,7 +76,7 @@ export const useRewardSimulation = (callbacks: RewardSimulationCallbacks) => {
       const badges = ['Beginner', 'Intermediate', 'Advanced'];
       const randomBadge = badges[Math.floor(Math.random() * badges.length)];
       addBadge(randomBadge);
-      callbacks.onBadgeEarned?.(randomBadge);
+      callbacksRef.current.onBadgeEarned?.(randomBadge);
       showReward('badge', 1);
       setBadgeName(randomBadge);
     };
@@ -83,7 +95,7 @@ export const useRewardSimulation = (callbacks: RewardSimulationCallbacks) => {
       clearInterval(streakInterval);
       clearInterval(badgeInterval);
     };
-  }, [addBadge, addCoins, addHints, callbacks, rewards.loginStreak, updateStreak, addXP]);
+  }, [addBadge, addCoins, addHints, updateStreak, addXP]);
 
   return {
     showRewardAnimation,

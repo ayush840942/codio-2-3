@@ -29,7 +29,7 @@ const PuzzleErrorState: React.FC<PuzzleErrorStateProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-puzzle-light">
+    <div className="min-h-[100dvh] bg-puzzle-light">
       <NavBar />
       <div className="max-w-4xl mx-auto px-4 py-16 text-center">
         <div className="flex justify-center mb-6">

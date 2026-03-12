@@ -20,6 +20,12 @@ const buttonVariants = cva(
         ghost: "hover:bg-secondary hover:text-foreground rounded-2xl",
         link: "text-primary underline-offset-4 hover:underline font-medium",
         gradient: "bg-gradient-to-r from-primary to-purple-600 text-white shadow-lg shadow-primary/30 hover:shadow-xl",
+        duo: "btn-duo btn-duo-green",
+        "duo-blue": "btn-duo btn-duo-blue",
+        "duo-yellow": "btn-duo btn-duo-yellow",
+        "duo-red": "btn-duo btn-duo-red",
+        "duo-orange": "btn-duo btn-duo-orange",
+        "duo-purple": "btn-duo btn-duo-purple",
       },
       size: {
         default: "h-12 px-6 py-3",
@@ -37,39 +43,34 @@ const buttonVariants = cva(
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+  VariantProps<typeof buttonVariants> {
   asChild?: boolean
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, children, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
-    
-    if (asChild) {
-      return (
-        <Comp
-          className={cn(buttonVariants({ variant, size, className }))}
-          ref={ref}
-          {...props}
-        >
-          {children}
-        </Comp>
-      )
-    }
+    const isDuo = variant?.toString().startsWith('duo');
+
+    const content = (
+      <Comp
+        className={cn(buttonVariants({ variant, size, className }))}
+        ref={ref}
+        {...props}
+      >
+        {children}
+      </Comp>
+    );
+
+    if (asChild) return content;
 
     return (
       <motion.div
-        whileTap={{ scale: 0.97 }}
-        whileHover={{ scale: 1.02 }}
+        whileTap={isDuo ? undefined : { scale: 0.97 }}
+        whileHover={isDuo ? undefined : { scale: 1.02 }}
         transition={{ type: "spring", stiffness: 400, damping: 17 }}
       >
-        <Comp
-          className={cn(buttonVariants({ variant, size, className }))}
-          ref={ref}
-          {...props}
-        >
-          {children}
-        </Comp>
+        {content}
       </motion.div>
     )
   }

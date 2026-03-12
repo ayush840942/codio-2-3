@@ -3,7 +3,7 @@ import React from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import NavBar from '@/components/NavBar';
 import MobileNavigation from '@/components/MobileNavigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 const MobileOptimizedLayout = () => {
   const location = useLocation();
@@ -13,47 +13,32 @@ const MobileOptimizedLayout = () => {
     location.pathname === '/code-result';
 
   return (
-    <div className="min-h-screen bg-background w-full">
-      {/* Notch Header - Matches app theme background */}
-      <div
-        className="fixed top-0 left-0 right-0 z-[60] bg-background"
-        style={{ height: 'var(--safe-area-top)' }}
-      />
+    <div className="min-h-[100dvh] bg-pastel-yellow/5 w-full font-draw relative overflow-x-hidden">
+      {/* Global Background dots pattern */}
+      <div className="fixed inset-0 opacity-[0.03] pointer-events-none z-0"
+        style={{ backgroundImage: 'radial-gradient(circle, #000 1.5px, transparent 1.5px)', backgroundSize: '30px 30px' }} />
 
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-        className="min-h-screen w-full pt-[var(--safe-area-top)]"
+      <div
+        className="relative z-10 min-h-[100dvh] w-full flex flex-col animate-fade-in"
       >
         {/* Desktop NavBar */}
         {!hideNavigation && (
-          <div className="hidden md:block w-full">
+          <div className="hidden md:block w-full px-4 pt-4">
             <NavBar />
           </div>
         )}
 
         {/* Main Content */}
-        <AnimatePresence mode="wait">
-          <motion.main
-            key={location.pathname}
-            className={`min-h-screen w-full ${hideNavigation ? 'pb-0 pt-0' : 'pb-24 md:pb-4'
-              }`}
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.02 }}
-            transition={{
-              duration: 0.4,
-              ease: "easeOut"
-            }}
-          >
-            <div className={`w-full ${hideNavigation ? 'px-0' : 'px-1 sm:px-2 md:px-4'}`}>
-              <Outlet />
-            </div>
-          </motion.main>
-        </AnimatePresence>
+        <main
+          className={`flex-1 w-full ${hideNavigation ? 'pb-0 pt-0' : 'pb-24 md:pb-4'
+            }`}
+        >
+          <div className={`w-full max-w-6xl mx-auto ${hideNavigation ? 'px-0' : 'px-4 sm:px-6'}`}>
+            <Outlet />
+          </div>
+        </main>
 
-      </motion.div>
+      </div>
 
       {/* Mobile Navigation - Outside motion wrapper to prevent transform interference */}
       {!hideNavigation && (

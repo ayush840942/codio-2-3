@@ -1,4 +1,3 @@
-
 /* Mobile-specific optimizations for Android compatibility */
 
 /* Prevent zoom on input focus - Critical for Android */
@@ -18,7 +17,9 @@ select {
 }
 
 /* Android-specific input styling */
-input, textarea, select {
+input,
+textarea,
+select {
   border-radius: 8px;
   padding: 12px 16px;
   line-height: 1.5;
@@ -113,7 +114,8 @@ input, textarea, select {
 /* Android keyboard handling */
 .keyboard-adjust {
   height: 100vh;
-  height: 100dvh; /* Dynamic viewport height for Android */
+  height: 100dvh;
+  /* Dynamic viewport height for Android */
 }
 
 /* Android notification positioning */
@@ -166,16 +168,17 @@ input, textarea, select {
   content: '';
   position: absolute;
   top: 0;
-  left: -100%;
+  left: 0;
   width: 100%;
   height: 100%;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transform: translateX(-100%);
   animation: android-shimmer 1.5s infinite;
 }
 
 @keyframes android-shimmer {
   100% {
-    left: 100%;
+    transform: translateX(100%);
   }
 }
 

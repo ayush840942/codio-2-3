@@ -13,7 +13,7 @@ interface UseSecureHintPurchaseProps {
 
 export const useSecureHintPurchase = ({ onSuccess }: UseSecureHintPurchaseProps = {}) => {
   const { user } = useAuth();
-  const { loading, handleSubscribe } = useSecureSubscription(user);
+  const { loading, isProcessing, handleSubscribe } = useSecureSubscription(user);
   const { addHints } = useRewards();
   const { requireEmailVerification, logSecurityEvent } = useAuthSecurity();
 
@@ -25,17 +25,17 @@ export const useSecureHintPurchase = ({ onSuccess }: UseSecureHintPurchaseProps 
       return;
     }
 
-    // Verify email for purchases over ₹500
-    if (pkg.price > 500) {
-      const canProceed = await requireEmailVerification('purchase hints over ₹500');
+    // Verify email for purchases over $50
+    if (pkg.price > 50) {
+      const canProceed = await requireEmailVerification('purchase hints over $50');
       if (!canProceed) {
         return;
       }
     }
 
     try {
-      console.log(`Attempting secure hint purchase: ${pkg.name} for ₹${pkg.price}`);
-      
+      console.log(`Attempting secure hint purchase: ${pkg.name} for $${pkg.price}`);
+
       // Log security event
       await logSecurityEvent('hint_purchase_attempt', {
         package_id: pkg.id,
@@ -43,7 +43,7 @@ export const useSecureHintPurchase = ({ onSuccess }: UseSecureHintPurchaseProps 
         price: pkg.price,
         hint_amount: pkg.hintAmount
       });
-      
+
       const hintPlan: Plan = {
         id: `hint-${pkg.id}`,
         name: pkg.name,
@@ -52,47 +52,47 @@ export const useSecureHintPurchase = ({ onSuccess }: UseSecureHintPurchaseProps 
         description: pkg.description,
         features: []
       };
-      
-      const result = await handleSubscribe(hintPlan, { 
-        type: 'hint-purchase', 
-        hintAmount: pkg.hintAmount 
+
+      const result = await handleSubscribe(hintPlan, {
+        type: 'hint-purchase',
+        hintAmount: pkg.hintAmount
       });
-      
+
       console.log(`Secure hint purchase result: ${result}`);
-      
+
       if (result > 0) {
         // Wait for database update to complete
         await addHints(pkg.hintAmount);
-        
+
         // Log successful purchase
         await logSecurityEvent('hint_purchase_success', {
           package_id: pkg.id,
           hint_amount: pkg.hintAmount,
           price: pkg.price
         });
-        
+
         if (onSuccess) {
           onSuccess(pkg.hintAmount);
         }
-        
+
         toast.success("Hints Purchased Successfully!", {
           description: `You received ${pkg.hintAmount} hint points! They are now available in your account.`
         });
       }
     } catch (error) {
       console.error('Error in secure hint purchase:', error);
-      
+
       // Log failed purchase
       await logSecurityEvent('hint_purchase_failed', {
         package_id: pkg.id,
         error: error instanceof Error ? error.message : 'Unknown error'
       });
-      
+
       toast.error('Purchase Failed', {
         description: 'There was an error processing your purchase. Please try again or contact support.'
       });
     }
   };
 
-  return { purchaseHints, loading };
+  return { purchaseHints, loading, isProcessing };
 };

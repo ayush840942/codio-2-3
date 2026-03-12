@@ -4,6 +4,7 @@ import { PushNotifications, Token, PushNotificationSchema, ActionPerformed } fro
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
+import { toDatabaseId } from '@/utils/idMapping';
 
 interface PushNotificationState {
   token: string | null;
@@ -35,10 +36,11 @@ export const usePushNotifications = () => {
       console.log('Saving push token to database for platform:', platform);
 
       // First try to find existing token
+      const dbId = toDatabaseId(user.id);
       const { data: existingToken } = await supabase
         .from('push_tokens')
         .select('id')
-        .eq('user_id', user.id)
+        .eq('user_id', dbId)
         .eq('token', token)
         .single();
 
@@ -59,10 +61,11 @@ export const usePushNotifications = () => {
         }
       } else {
         // Insert new token
+        const dbId = toDatabaseId(user.id);
         const { error } = await supabase
           .from('push_tokens')
           .insert({
-            user_id: user.id,
+            user_id: dbId,
             token,
             platform,
           });

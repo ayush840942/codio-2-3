@@ -18,21 +18,21 @@ export const usePuzzleStateHandler = () => {
         console.error(`Block with id ${blockId} not found`);
         return;
       }
-      
+
       if (block.isPlaced) {
         playBlockRemove();
         setPlacedBlocks(prev => prev.filter(b => b.id !== blockId));
-        setAvailableBlocks(prev => prev.map(b => 
+        setAvailableBlocks(prev => prev.map(b =>
           b.id === blockId ? { ...b, isPlaced: false } : b
         ));
       } else {
         playBlockPlace();
         setPlacedBlocks(prev => [...prev, { ...block, isPlaced: true }]);
-        setAvailableBlocks(prev => prev.map(b => 
+        setAvailableBlocks(prev => prev.map(b =>
           b.id === blockId ? { ...b, isPlaced: true } : b
         ));
       }
-      
+
       setFeedback(null);
       setCodeOutput(null);
     } catch (error) {
@@ -54,15 +54,15 @@ export const usePuzzleStateHandler = () => {
         console.error(`Invalid block index: ${index}`);
         return;
       }
-      
+
       const blockToRemove = placedBlocks[index];
       if (blockToRemove) {
         playBlockRemove();
         setPlacedBlocks(prev => prev.filter((_, i) => i !== index));
-        setAvailableBlocks(prev => prev.map(block => 
+        setAvailableBlocks(prev => prev.map(block =>
           block.id === blockToRemove.id ? { ...block, isPlaced: false } : block
         ));
-        
+
         setFeedback(null);
         setCodeOutput(null);
       }
@@ -70,7 +70,7 @@ export const usePuzzleStateHandler = () => {
       console.error('Error removing block:', error);
     }
   }, [placedBlocks, playBlockRemove]);
-  
+
   const resetPuzzleState = useCallback((resetBlocks: PuzzleBlockData[]) => {
     try {
       setPlacedBlocks([]);

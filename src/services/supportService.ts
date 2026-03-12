@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { toDatabaseId } from '@/utils/idMapping';
 
 export interface SupportTicket {
     id: string;
@@ -16,8 +17,9 @@ export const sendSupportRequest = async (
     metadata?: any
 ): Promise<boolean> => {
     try {
+        const dbUserId = toDatabaseId(userId);
         const { error } = await supabase.from('user_notes').insert({
-            user_id: userId,
+            user_id: dbUserId,
             title: `Support: ${subject}`,
             content: JSON.stringify({
                 message,
@@ -40,10 +42,11 @@ export const sendSupportRequest = async (
 
 export const fetchUserTickets = async (userId: string): Promise<SupportTicket[]> => {
     try {
+        const dbUserId = toDatabaseId(userId);
         const { data, error } = await supabase
             .from('user_notes')
             .select('*')
-            .eq('user_id', userId)
+            .eq('user_id', dbUserId)
             .eq('category', 'support')
             .order('created_at', { ascending: false });
 

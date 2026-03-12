@@ -1,13 +1,7 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { sendSupportRequest, fetchUserTickets, SupportTicket } from '@/services/supportService';
 import { format } from 'date-fns';
@@ -22,9 +16,13 @@ import {
   Send,
   Loader2,
   History,
-  Info,
-  ExternalLink
+  Sparkles
 } from 'lucide-react';
+import { DrawnButton, DrawnCard, DrawnInput } from '@/components/ui/HandDrawnComponents';
+import { Badge } from '@/components/ui/badge';
+import Logo from '@/components/ui/logo';
+import MobileHeader from '@/components/MobileHeader';
+import { cn } from '@/lib/utils';
 
 const HelpPage: React.FC = () => {
   const navigate = useNavigate();
@@ -56,27 +54,23 @@ const HelpPage: React.FC = () => {
   const faqs = [
     {
       question: 'How do I earn hints?',
-      answer: 'You can earn hints through daily rewards, completing levels, maintaining streaks, or purchasing them from the Hint Store. Claim your daily reward every day for free hints!'
+      answer: 'You can earn hints through daily rewards, completing levels, maintaining streaks, or purchasing them from the Hint Store!'
     },
     {
       question: 'What is the Subscription plan?',
-      answer: 'Our subscription gives you unlimited hints, ad-free experience, access to all premium levels, and priority support. Choose between monthly or yearly plans.'
+      answer: 'Our subscription gives you unlimited hints, ad-free experience, and access to all 200+ premium levels!'
     },
     {
       question: 'How do I reset my progress?',
-      answer: 'Go to Settings > Clear Cache to reset your local progress. Note that your account data and achievements are stored securely and won\'t be affected.'
-    },
-    {
-      question: 'Can I use the app offline?',
-      answer: 'Currently, Codio requires an internet connection to sync your progress and validate solutions. Offline mode is coming soon!'
+      answer: 'Go to Settings > Clear Cache to reset your local progress. Your cloud achievements are safe!'
     },
     {
       question: 'How do hints work?',
-      answer: 'Hints help you when you\'re stuck. Each puzzle has multiple hint levels - first gives a gentle nudge, and further hints provide more specific guidance.'
+      answer: 'Stuck? Tap the hint icon for a gentle nudge. We show you the logic without giving away the answer!'
     },
     {
       question: 'Is my progress saved?',
-      answer: 'Yes! Your progress is automatically synced to your account. You can continue learning on any device by signing in with the same account.'
+      answer: 'Yes! Your journey is automatically synced. Pick up where you left off on any device.'
     }
   ];
 
@@ -85,280 +79,192 @@ const HelpPage: React.FC = () => {
       toast.error('Please sign in to send a message');
       return;
     }
-
     if (!contactForm.subject.trim() || !contactForm.message.trim()) {
-      toast.error('Please fill in all fields');
+      toast.error('Fill in all fields, adventurer!');
       return;
     }
-
-    if (contactForm.message.length < 10) {
-      toast.error('Message is too short. Please provide more detail.');
-      return;
-    }
-
     setSending(true);
     try {
-      const success = await sendSupportRequest(
-        user.id,
-        contactForm.subject,
-        contactForm.message,
-        {
-          environment: window.location.hostname,
-          userAgent: navigator.userAgent,
-          platform: (navigator as any).platform
-        }
-      );
-
+      const success = await sendSupportRequest(user.id, contactForm.subject, contactForm.message, { platform: 'web' });
       if (success) {
-        toast.success('Message sent! We\'ll get back to you soon.');
+        toast.success('Message sent! Our wizards will reply soon.');
         setContactForm({ subject: '', message: '' });
-        loadTickets(); // Refresh history
-      } else {
-        throw new Error('Failed to send');
+        loadTickets();
       }
     } catch (error) {
-      console.error('Error sending message:', error);
-      toast.error('Failed to send message. Please try again.');
+      toast.error('Failed to send message. Try again later.');
     } finally {
       setSending(false);
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'resolved': return <Badge className="bg-puzzle-green/20 text-puzzle-green border-puzzle-green/20">Resolved</Badge>;
-      case 'pending': return <Badge className="bg-pastel-yellow text-foreground border-border">Pending</Badge>;
-      default: return <Badge className="bg-secondary text-muted-foreground">Received</Badge>;
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-lavender-50 to-background pb-28">
-      <div className="px-4 py-6 space-y-5 max-w-md mx-auto">
+    <div className="min-h-[100dvh] bg-pastel-yellow/30 pb-32 font-draw relative">
+      {/* Background patterns */}
+      <div className="absolute inset-0 opacity-10 pointer-events-none"
+        style={{ backgroundImage: 'radial-gradient(circle, #000 1.2px, transparent 1.2px)', backgroundSize: '25px 25px' }} />
 
-        {/* Header */}
-        <div className="flex items-center gap-4">
-          <Button
-            onClick={() => navigate(-1)}
-            variant="ghost"
-            size="icon"
-            className="w-10 h-10 rounded-2xl bg-card border border-border"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground font-display">Help & Support</h1>
-            <p className="text-sm text-muted-foreground">We're here to help</p>
-          </div>
-        </div>
+      <div className="px-5 pb-10 space-y-10 max-w-md mx-auto relative z-10" style={{ paddingTop: 'calc(var(--safe-area-top) + 4.5rem)' }}>
+        {/* Unified Mobile Header */}
+        <MobileHeader
+          title="Support"
+          subtitle="We're here to help!"
+          showBack
+          rightElement={
+            <div className="rotate-3 shadow-comic-sm bg-white p-2 rounded-2xl border-2 border-black">
+              <Logo size="sm" showText={false} />
+            </div>
+          }
+        />
 
         {/* Tabs */}
-        <div className="flex gap-2 bg-secondary/50 p-1 rounded-2xl">
-          <Button
+        <div className="flex bg-black p-1.5 rounded-[2rem] shadow-comic border-4 border-black">
+          <button
             onClick={() => setActiveTab('faq')}
-            variant={activeTab === 'faq' ? 'default' : 'ghost'}
-            className={`flex-1 rounded-xl ${activeTab === 'faq' ? '' : 'text-muted-foreground'}`}
+            className={cn(
+              "flex-1 py-4 px-4 rounded-[1.5rem] font-black uppercase text-xs tracking-[0.2em] transition-all",
+              activeTab === 'faq' ? "bg-cc-yellow text-black shadow-comic-sm" : "text-white/40"
+            )}
           >
-            <HelpCircle className="w-4 h-4 mr-2" />
             FAQs
-          </Button>
-          <Button
+          </button>
+          <button
             onClick={() => setActiveTab('contact')}
-            variant={activeTab === 'contact' ? 'default' : 'ghost'}
-            className={`flex-1 rounded-xl ${activeTab === 'contact' ? '' : 'text-muted-foreground'}`}
+            className={cn(
+              "flex-1 py-4 px-4 rounded-[1.5rem] font-black uppercase text-xs tracking-[0.2em] transition-all",
+              activeTab === 'contact' ? "bg-cc-pink text-black shadow-comic-sm" : "text-white/40"
+            )}
           >
-            <MessageCircle className="w-4 h-4 mr-2" />
             Contact
-          </Button>
+          </button>
         </div>
 
-        {/* FAQ Tab */}
-        {activeTab === 'faq' && (
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="space-y-3"
-          >
-            {faqs.map((faq, index) => (
-              <Card
-                key={index}
-                className="overflow-hidden cursor-pointer"
-                onClick={() => setExpandedFaq(expandedFaq === index ? null : index)}
-              >
-                <CardContent className="p-4">
+        {/* Content */}
+        <AnimatePresence mode="wait">
+          {activeTab === 'faq' ? (
+            <motion.div
+              key="faq"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              className="space-y-6"
+            >
+              {faqs.map((faq, index) => (
+                <DrawnCard
+                  key={index}
+                  className="bg-white p-6 overflow-hidden cursor-pointer border-4 border-black shadow-comic-lg active:translate-y-1 active:shadow-none transition-all"
+                  onClick={() => setExpandedFaq(expandedFaq === index ? null : index)}
+                >
                   <div className="flex items-center justify-between">
-                    <p className="font-medium text-foreground pr-4">{faq.question}</p>
-                    {expandedFaq === index ? (
-                      <ChevronDown className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-                    ) : (
-                      <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-                    )}
+                    <p className="font-black text-black pr-4 uppercase tracking-tight leading-tight text-lg">{faq.question}</p>
+                    <div className="w-8 h-8 rounded-full bg-black/5 flex items-center justify-center border-2 border-black/10">
+                      {expandedFaq === index ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+                    </div>
                   </div>
-
                   {expandedFaq === index && (
-                    <motion.p
+                    <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
-                      className="text-sm text-muted-foreground mt-3 pt-3 border-t border-border"
+                      className="text-sm font-black text-black/60 mt-4 pt-4 border-t-4 border-black border-dashed leading-tight italic bg-black/5 p-4 rounded-xl"
                     >
-                      {faq.answer}
-                    </motion.p>
+                      "{faq.answer}"
+                    </motion.div>
                   )}
-                </CardContent>
-              </Card>
-            ))}
-          </motion.div>
-        )}
-
-        {/* Contact Tab */}
-        {activeTab === 'contact' && (
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="space-y-4"
-          >
-            {/* Quick Links */}
-            <Card>
-              <CardContent className="p-4 space-y-3">
-                <a
-                  href="mailto:support@codio.app"
-                  className="flex items-center gap-3 p-3 bg-secondary/50 rounded-xl hover:bg-secondary transition-colors"
-                >
-                  <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
-                    <Mail className="w-5 h-5 text-primary" />
+                </DrawnCard>
+              ))}
+            </motion.div>
+          ) : (
+            <motion.div
+              key="contact"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="space-y-8"
+            >
+              <DrawnCard className="bg-cc-yellow/20 border-4 border-black border-dashed shadow-comic p-6">
+                <div className="flex items-center gap-5">
+                  <div className="w-14 h-14 bg-cc-yellow border-4 border-black rounded-2xl flex items-center justify-center shadow-comic-sm rotate-[-5deg]">
+                    <Mail className="w-8 h-8 text-black" strokeWidth={3} />
                   </div>
                   <div>
-                    <p className="font-medium text-foreground">Email Support</p>
-                    <p className="text-xs text-muted-foreground">support@codio.app</p>
+                    <p className="font-black text-black leading-none uppercase tracking-tighter text-lg">Email Support</p>
+                    <p className="text-xs font-black text-black/40 uppercase tracking-widest mt-1">support@codio.app</p>
                   </div>
-                </a>
+                </div>
+              </DrawnCard>
 
-                <a
-                  href="https://docs.codio.app"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-3 bg-secondary/50 rounded-xl hover:bg-secondary transition-colors"
-                >
-                  <div className="w-10 h-10 bg-puzzle-green/10 rounded-xl flex items-center justify-center">
-                    <Book className="w-5 h-5 text-puzzle-green" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground">Documentation</p>
-                    <p className="text-xs text-muted-foreground">Browse our guides</p>
-                  </div>
-                </a>
-              </CardContent>
-            </Card>
-
-            {/* Contact Form */}
-            <Card className="border-primary/20 bg-primary/5">
-              <CardContent className="p-4 space-y-4">
+              <DrawnCard className="bg-white space-y-6 p-6 border-4 border-black shadow-comic-lg">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-foreground">Send us a message</h3>
-                  <Badge variant="outline" className="text-[10px] uppercase tracking-wider">Direct Support</Badge>
+                  <h3 className="font-black text-black uppercase tracking-tighter italic text-2xl flex items-center gap-3 relative">
+                    <Sparkles className="w-6 h-6 text-cc-pink fill-cc-pink" />
+                    <span>Drop a message</span>
+                  </h3>
                 </div>
 
-                <Input
-                  placeholder="Subject (e.g. Payment Issue, App Bug)"
-                  value={contactForm.subject}
-                  onChange={(e) => setContactForm({ ...contactForm, subject: e.target.value })}
-                  className="rounded-xl bg-card border-border"
-                />
+                <div className="space-y-4">
+                  <DrawnInput
+                    placeholder="Subject (e.g. Payment Issue)"
+                    value={contactForm.subject}
+                    onChange={(e) => setContactForm({ ...contactForm, subject: e.target.value })}
+                    className="bg-white border-3 border-black rounded-xl h-14 font-black uppercase tracking-tight p-4 shadow-comic-sm"
+                  />
 
-                <Textarea
-                  placeholder="Describe your issue or feedback in detail..."
-                  value={contactForm.message}
-                  onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
-                  className="rounded-xl min-h-[120px] resize-none bg-card border-border"
-                />
+                  <textarea
+                    placeholder="Describe your issue in detail..."
+                    value={contactForm.message}
+                    onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
+                    className="w-full bg-white border-3 border-black rounded-2xl p-5 font-black focus:outline-none min-h-[150px] resize-none shadow-comic-sm italic text-black/70"
+                  />
 
-                <div className="flex gap-2">
-                  <Button
+                  <DrawnButton
                     onClick={handleSubmitContact}
                     disabled={sending}
-                    variant="gradient"
-                    className="flex-1 rounded-xl shadow-lg"
+                    variant="accent"
+                    className="w-full h-16 bg-cc-green text-black border-4 border-black shadow-comic active:translate-y-1 active:shadow-none transition-all text-xl font-black uppercase tracking-widest"
                   >
-                    {sending ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Sending...
-                      </>
-                    ) : (
-                      <>
-                        <Send className="w-4 h-4 mr-2" />
-                        Submit Ticket
-                      </>
-                    )}
-                  </Button>
+                    {sending ? <Loader2 className="w-8 h-8 animate-spin" /> : <span className="flex items-center gap-3">SEND MESSAGE <Send className="w-6 h-6" /></span>}
+                  </DrawnButton>
+                </div>
+              </DrawnCard>
 
-                  <Button
-                    variant="outline"
-                    className="h-12 w-12 rounded-xl border-border bg-card p-0"
-                    title="Send via Email instead"
-                    onClick={() => {
-                      const subject = encodeURIComponent(contactForm.subject || 'Support Request');
-                      const body = encodeURIComponent(contactForm.message || '');
-                      window.location.href = `mailto:support@codio.local?subject=${subject}&body=${body}`;
-                    }}
-                  >
-                    <Mail className="h-5 w-5" />
-                  </Button>
+              {/* Tickets History */}
+              <div className="space-y-6 pt-6">
+                <div className="flex items-center gap-3 px-2">
+                  <div className="w-10 h-10 bg-black/5 rounded-xl flex items-center justify-center border-2 border-dashed border-black/20">
+                    <History className="w-6 h-6 text-black" strokeWidth={3} />
+                  </div>
+                  <h3 className="font-black text-black uppercase tracking-[0.2em] text-xs">My Ticket History</h3>
                 </div>
 
-                <p className="text-[10px] text-muted-foreground text-center">
-                  Replies are usually sent within 24 hours to your registered email.
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Ticket History */}
-            <div className="pt-2 space-y-4">
-              <div className="flex items-center gap-2 px-1">
-                <History className="w-4 h-4 text-primary" />
-                <h3 className="font-bold text-foreground">My Tickets</h3>
-              </div>
-
-              {loadingTickets ? (
-                <div className="flex justify-center p-8">
-                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                </div>
-              ) : tickets.length === 0 ? (
-                <Card className="bg-secondary/20 border-dashed">
-                  <CardContent className="p-8 text-center">
-                    <div className="w-12 h-12 bg-secondary/50 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <MessageCircle className="w-6 h-6 text-muted-foreground" />
-                    </div>
-                    <p className="text-sm text-muted-foreground">No support messages yet.</p>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="space-y-3">
-                  {tickets.map((ticket) => (
-                    <Card key={ticket.id} className="group hover:border-primary/30 transition-colors">
-                      <CardContent className="p-4 space-y-3">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="space-y-1">
-                            <h4 className="font-bold text-sm text-foreground group-hover:text-primary transition-colors">
-                              {ticket.title}
-                            </h4>
-                            <p className="text-[10px] text-muted-foreground">
-                              {format(new Date(ticket.created_at), 'MMM dd, yyyy • hh:mm a')}
-                            </p>
-                          </div>
-                          {getStatusBadge(ticket.status)}
+                {tickets.length === 0 ? (
+                  <DrawnCard className="bg-black/5 border-4 border-black border-dashed text-center p-12 shadow-inner">
+                    <p className="text-sm font-black text-black/30 uppercase tracking-[0.3em] italic">No messages yet!</p>
+                  </DrawnCard>
+                ) : (
+                  <div className="space-y-5">
+                    {tickets.map((t) => (
+                      <DrawnCard key={t.id} className="bg-white border-4 border-black shadow-comic p-6 rotate-[1deg]">
+                        <div className="flex justify-between items-start mb-4">
+                          <h4 className="font-black text-black uppercase tracking-tighter text-lg leading-tight flex-1 pr-4">{t.title}</h4>
+                          <Badge className={cn("text-[10px] font-black uppercase border-2 border-black h-6 px-3 shadow-comic-sm",
+                            t.status === 'resolved' ? "bg-cc-green text-black" : "bg-cc-yellow text-black"
+                          )}>
+                            {t.status}
+                          </Badge>
                         </div>
-                        <p className="text-xs text-muted-foreground line-clamp-2 bg-secondary/30 p-2 rounded-lg italic">
-                          "{ticket.content}"
+                        <p className="text-[10px] font-black text-black/30 uppercase tracking-widest mb-4 flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 bg-black/20 rounded-full" />
+                          {format(new Date(t.created_at), 'MMMM dd, yyyy')}
                         </p>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </div>
-          </motion.div>
-        )}
+                        <p className="text-sm font-black text-black/60 italic bg-black/5 p-4 rounded-xl border-2 border-black/5">"{t.content}"</p>
+                      </DrawnCard>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

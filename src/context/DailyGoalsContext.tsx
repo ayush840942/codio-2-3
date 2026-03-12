@@ -1,261 +1,188 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useGame } from './GameContext';
 import { useRewards } from './RewardsContext';
+import { useHearts } from './HeartsContext';
 import { toast } from 'sonner';
 
-interface DailyGoal {
+export type DailyGoal = {
     id: string;
     title: string;
-    description: string;
     target: number;
     current: number;
-    reward: { type: 'xp' | 'hearts'; amount: number };
     completed: boolean;
-}
+    claimed: boolean;
+    reward: {
+        type: 'xp' | 'hearts';
+        amount: number;
+    };
+};
 
-interface DailyGoalsContextType {
+const POOL_GOALS: Omit<DailyGoal, 'current' | 'completed' | 'claimed'>[] = [
+    { id: 'earn_xp', title: 'Earn 50 XP', target: 50, reward: { type: 'xp', amount: 20 } },
+    { id: 'complete_levels', title: 'Complete 3 Levels', target: 3, reward: { type: 'xp', amount: 30 } },
+    { id: 'practice_time', title: 'Practice for 10 mins', target: 10, reward: { type: 'xp', amount: 15 } },
+    { id: 'use_hint', title: 'Use a Hint', target: 1, reward: { type: 'xp', amount: 10 } },
+    { id: 'maintain_streak', title: 'Keep the Streak', target: 1, reward: { type: 'hearts', amount: 1 } },
+    { id: 'achieve_mastery', title: 'Perfect Score', target: 1, reward: { type: 'xp', amount: 25 } },
+];
+
+type DailyGoalsContextType = {
     goals: DailyGoal[];
-    updateGoalProgress: (goalId: string, progress: number) => void;
-    claimGoalReward: (goalId: string) => { type: 'xp' | 'hearts'; amount: number } | null;
-    resetDailyGoals: () => void;
-}
+    claimGoalReward: (goalId: string) => void;
+    updateGoalProgress: (goalId: string, increment: number) => void;
+};
 
 const DailyGoalsContext = createContext<DailyGoalsContextType | undefined>(undefined);
 
-const POOL_GOALS: DailyGoal[] = [
-    {
-        id: 'complete_levels',
-        title: 'Complete 3 Levels',
-        description: 'Finish 3 coding challenges',
-        target: 3,
-        current: 0,
-        reward: { type: 'xp', amount: 50 },
-        completed: false,
-    },
-    {
-        id: 'earn_xp',
-        title: 'Earn 50 XP',
-        description: 'Gain experience points',
-        target: 50,
-        current: 0,
-        reward: { type: 'hearts', amount: 1 },
-        completed: false,
-    },
-    {
-        id: 'practice_time',
-        title: 'Practice 15 Minutes',
-        description: 'Spend time coding',
-        target: 15,
-        current: 0,
-        reward: { type: 'xp', amount: 30 },
-        completed: false,
-    },
-    {
-        id: 'help_others',
-        title: 'Ask 2 Questions',
-        description: 'Engage with Codio Assistant',
-        target: 2,
-        current: 0,
-        reward: { type: 'xp', amount: 20 },
-        completed: false,
-    },
-    {
-        id: 'streak_save',
-        title: 'Practice 2 Days',
-        description: 'Keep your streak alive',
-        target: 2,
-        current: 0,
-        reward: { type: 'xp', amount: 100 },
-        completed: false,
-    },
-];
-
-const DEFAULT_GOALS = POOL_GOALS.slice(0, 3);
-
 export const DailyGoalsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [goals, setGoals] = useState<DailyGoal[]>(DEFAULT_GOALS);
-    const [lastResetDate, setLastResetDate] = useState<string | null>(null);
-
-    // Get contexts for tracking
-    const gameContext = useGame();
+    const { gameState } = useGame();
     const rewardsContext = useRewards();
+    const heartsContext = useHearts();
 
-    // Load goals from localStorage
-    useEffect(() => {
-        const loadGoals = () => {
-            try {
-                const stored = localStorage.getItem('codio_daily_goals');
-                if (stored) {
-                    const data = JSON.parse(stored);
-                    setGoals(data.goals || DEFAULT_GOALS);
-                    setLastResetDate(data.lastResetDate || null);
-                }
-            } catch (error) {
-                console.error('Failed to load daily goals:', error);
-            }
-        };
-        loadGoals();
-    }, []);
-
-    // Save goals to localStorage
-    useEffect(() => {
-        try {
-            localStorage.setItem('codio_daily_goals', JSON.stringify({
-                goals,
-                lastResetDate,
-            }));
-        } catch (error) {
-            console.error('Failed to save daily goals:', error);
-        }
-    }, [goals, lastResetDate]);
-
-    // Check if goals need to be reset (new day)
-    useEffect(() => {
-        const checkReset = () => {
-            const today = new Date().toDateString();
-            if (lastResetDate !== today) {
-                console.log('New day detected, resetting daily goals');
-                resetDailyGoals();
-                setLastResetDate(today);
-            }
-        };
-
-        checkReset();
-        // Check every minute for day change
-        const interval = setInterval(checkReset, 60000);
-        return () => clearInterval(interval);
-    }, [lastResetDate]);
-
-    // Track level completions & XP & streak in a unified real-time reaction
-    useEffect(() => {
-        if (!gameContext?.gameState) return;
-
-        const { levels, xp } = gameContext.gameState;
+    const [goals, setGoals] = useState<DailyGoal[]>(() => {
+        const saved = localStorage.getItem('daily_goals');
+        const lastReset = localStorage.getItem('last_goals_reset');
         const today = new Date().toDateString();
 
-        // 1. Update level completion goal
-        const completedLevels = levels.filter(l => l.isCompleted).length;
-        const dailyLevelsKey = `daily_goals_levels_start_${today}`;
-        let levelsStart = parseInt(localStorage.getItem(dailyLevelsKey) || '-1');
-
-        if (levelsStart === -1) {
-            levelsStart = completedLevels;
-            localStorage.setItem(dailyLevelsKey, levelsStart.toString());
+        if (saved && lastReset === today) {
+            return JSON.parse(saved);
         }
 
-        const levelsToday = Math.max(0, completedLevels - levelsStart);
+        // Default goals for a new day
+        localStorage.setItem('last_goals_reset', today);
+        return POOL_GOALS.slice(0, 3).map(g => ({ ...g, current: 0, completed: false, claimed: false }));
+    });
 
-        // 2. Update XP goal
-        const dailyXPKey = `daily_goals_xp_start_${today}`;
-        let xpStart = parseInt(localStorage.getItem(dailyXPKey) || '-1');
-
-        if (xpStart === -1) {
-            xpStart = xp;
-            localStorage.setItem(dailyXPKey, xpStart.toString());
-        }
-
-        const xpToday = Math.max(0, xp - xpStart);
-
-        // 3. Update goals state
-        setGoals(prev => {
-            const updated = prev.map(goal => {
-                let newCurrent = goal.current;
-
-                if (goal.id === 'complete_levels') {
-                    newCurrent = Math.min(levelsToday, goal.target);
-                } else if (goal.id === 'earn_xp') {
-                    newCurrent = Math.min(xpToday, goal.target);
-                } else if (goal.id === 'practice_time') {
-                    // Logic for practice time: if they just completed a level or earned XP today, 
-                    // we count it as active practice for now as a proxy if real timer isn't active
-                    if (levelsToday > 0 || xpToday > 0) {
-                        newCurrent = Math.min(goal.current + 5, goal.target); // Increment by 5 mins per action as simplified proxy
-                    }
-                }
-
-                const wasCompleted = goal.completed;
-                const completed = newCurrent >= goal.target;
-
-                if (!wasCompleted && completed) {
-                    toast.success(`🎉 Daily Goal Complete!`, {
-                        description: `${goal.title} - XP reward added!`
-                    });
-                    // In a real app, you'd add the actual reward here to the game state
-                }
-
-                return { ...goal, current: newCurrent, completed };
-            });
-
-            // Only update state if values actually changed to avoid infinite loops
-            const changed = JSON.stringify(prev) !== JSON.stringify(updated);
-            return changed ? updated : prev;
-        });
-
-    }, [gameContext?.gameState?.levels, gameContext?.gameState?.xp, rewardsContext?.rewards?.streak]);
-
-    const updateGoalProgress = useCallback((goalId: string, progress: number) => {
-        setGoals(prev => prev.map(goal => {
-            if (goal.id === goalId) {
-                const newCurrent = Math.min(goal.current + progress, goal.target);
-                const wasCompleted = goal.completed;
-                const completed = newCurrent >= goal.target;
-
-                // Show toast when goal is newly completed
-                if (!wasCompleted && completed) {
-                    toast.success(`🎉 Daily Goal Complete!`, {
-                        description: `${goal.title} - Claim your reward!`
-                    });
-                }
-
-                return { ...goal, current: newCurrent, completed };
-            }
-            return goal;
-        }));
-    }, []);
-
-    const claimGoalReward = useCallback((goalId: string) => {
-        const goal = goals.find(g => g.id === goalId);
-        if (!goal || !goal.completed) return null;
-
-        // Reward logic (could be more complex)
-        const reward = goal.reward;
-
-        // Rotate Goal: Find a goal from pool that isn't currently active
-        const activeIds = goals.map(g => g.id);
-        const nextGoal = POOL_GOALS.find(p => !activeIds.includes(p.id));
-
-        if (nextGoal) {
-            setGoals(prev => prev.map(g => g.id === goalId ? { ...nextGoal } : g));
-            toast.success(`Goal Rotated!`, {
-                description: `New goal: ${nextGoal.title}`
-            });
-        } else {
-            // If no more goals in pool, just reset this one but harder? 
-            // For now just reset it to not show as "completed" indefinitely
-            setGoals(prev => prev.map(g => g.id === goalId ? { ...g, current: 0, completed: false } : g));
-        }
-
-        return reward;
+    useEffect(() => {
+        localStorage.setItem('daily_goals', JSON.stringify(goals));
     }, [goals]);
 
-    const resetDailyGoals = useCallback(() => {
-        setGoals(DEFAULT_GOALS.map(goal => ({ ...goal, current: 0, completed: false })));
-        // Reset daily tracking
-        const today = new Date().toDateString();
-        localStorage.removeItem(`daily_goals_xp_${today}`);
-        const completedLevels = gameContext?.gameState?.levels?.filter(l => l.isCompleted).length || 0;
-        localStorage.setItem('daily_goals_last_levels', completedLevels.toString());
-    }, [gameContext?.gameState?.levels]);
+    const updateGoalProgress = useCallback((goalId: string, increment: number) => {
+        setGoals(prev => {
+            const newGoals = prev.map(goal => {
+                if (goal.id === goalId && !goal.completed) {
+                    const newCurrent = goal.current + increment;
+                    const isNowCompleted = newCurrent >= goal.target;
+                    if (isNowCompleted && !goal.completed) {
+                        toast.success(`Goal Achieved: ${goal.title}!`);
+                    }
+                    return { ...goal, current: newCurrent, completed: isNowCompleted };
+                }
+                return goal;
+            });
+            return newGoals;
+        });
+    }, []);
+
+    const { rewards } = useRewards();
+    const lastXPRef = React.useRef(rewards.xp);
+
+    // Track XP gains in real-time
+    useEffect(() => {
+        if (rewards.xp > lastXPRef.current) {
+            const gain = rewards.xp - lastXPRef.current;
+            // Only update if it's not a logic error
+            if (gain > 0 && gain < 1000) {
+                updateGoalProgress('earn_xp', gain);
+            }
+            lastXPRef.current = rewards.xp;
+        } else if (rewards.xp < lastXPRef.current) {
+            lastXPRef.current = rewards.xp;
+        }
+    }, [rewards.xp, updateGoalProgress]);
+
+    // Track level completions in real-time
+    useEffect(() => {
+        const completedCount = gameState.levels.filter(l => l.isCompleted).length;
+        const lastCompletedCountString = localStorage.getItem('last_completed_count');
+        const lastCompletedCount = lastCompletedCountString ? JSON.parse(lastCompletedCountString) : completedCount;
+
+        if (completedCount > lastCompletedCount) {
+            updateGoalProgress('complete_levels', completedCount - lastCompletedCount);
+        }
+        localStorage.setItem('last_completed_count', JSON.stringify(completedCount));
+    }, [gameState.levels, updateGoalProgress]);
+
+    // Practice time tracking
+    useEffect(() => {
+        const interval = setInterval(() => {
+            // Check if user is on a puzzle page
+            if (window.location.pathname.includes('/puzzle/')) {
+                updateGoalProgress('practice_time', 1); // Increment by 1 minute (simulated by faster update for testing or just 1/60th)
+                // For better accuracy, we should track seconds and convert, but for now 1 unit = 1 progress
+            }
+        }, 60000); // Every minute
+        return () => clearInterval(interval);
+    }, [updateGoalProgress]);
+
+    const [isClaiming, setIsClaiming] = useState(false);
+
+    const claimGoalReward = useCallback(async (goalId: string) => {
+        if (isClaiming) return;
+
+        const goal = goals.find(g => g.id === goalId);
+        if (!goal || !goal.completed || goal.claimed) {
+            console.warn('⚠️ Cannot claim goal reward:', { id: goalId, goal });
+            return;
+        }
+
+        setIsClaiming(true);
+        try {
+            console.log(`🎁 Starting to claim reward for: ${goal.title} (+${goal.reward.amount} ${goal.reward.type})`);
+
+            // 1. Mark as claimed LOCALLY first for immediate feedback
+            const updatedGoals = goals.map(g => g.id === goalId ? { ...g, claimed: true } : g);
+            setGoals(updatedGoals);
+            localStorage.setItem('daily_goals', JSON.stringify(updatedGoals));
+
+            // 2. Grant the reward (Optimistic, don't fail if offline/guest)
+            if (goal.reward.type === 'xp') {
+                await rewardsContext.addXP(goal.reward.amount);
+            } else if (goal.reward.type === 'hearts') {
+                await heartsContext.addHearts(goal.reward.amount);
+            }
+
+            console.log('✅ Reward successfully claimed locally');
+            toast.success(`🎉 +${goal.reward.amount} ${goal.reward.type.toUpperCase()}!`);
+
+            // 3. Immediate Rotation Logic (Infinite Missions)
+            setGoals(prev => {
+                const currentIds = prev.map(g => g.id);
+                // Filter out the goal we just claimed and any already in the list
+                const availablePool = POOL_GOALS.filter(pg => pg.id !== goalId && !currentIds.includes(pg.id));
+
+                let nextGoal;
+                if (availablePool.length > 0) {
+                    // Pick a random available goal
+                    nextGoal = availablePool[Math.floor(Math.random() * availablePool.length)];
+                } else {
+                    // Fallback if all are somehow used (just pick any other goal to keep infinite loop going)
+                    nextGoal = POOL_GOALS.find(pg => pg.id !== goalId) || POOL_GOALS[0];
+                }
+
+                // Replace the claimed goal with the new goal immediately
+                const rotatedGoals = prev.map(g =>
+                    g.id === goalId ? { ...nextGoal, current: 0, completed: false, claimed: false } : g
+                );
+
+                localStorage.setItem('daily_goals', JSON.stringify(rotatedGoals));
+                return rotatedGoals;
+            });
+
+        } catch (error) {
+            console.error('❌ Error claiming goal reward:', error);
+            toast.error('Failed to claim reward. Please try again.');
+            // Revert claimed state
+            const revertedGoals = goals.map(g => g.id === goalId ? { ...g, claimed: false } : g);
+            setGoals(revertedGoals);
+            localStorage.setItem('daily_goals', JSON.stringify(revertedGoals));
+        } finally {
+            setIsClaiming(false);
+        }
+    }, [goals, rewardsContext, heartsContext, isClaiming]);
 
     return (
-        <DailyGoalsContext.Provider
-            value={{
-                goals,
-                updateGoalProgress,
-                claimGoalReward,
-                resetDailyGoals,
-            }}
-        >
+        <DailyGoalsContext.Provider value={{ goals, claimGoalReward, updateGoalProgress }}>
             {children}
         </DailyGoalsContext.Provider>
     );
@@ -263,8 +190,6 @@ export const DailyGoalsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
 export const useDailyGoals = () => {
     const context = useContext(DailyGoalsContext);
-    if (!context) {
-        throw new Error('useDailyGoals must be used within DailyGoalsProvider');
-    }
+    if (!context) throw new Error('useDailyGoals must be used within a DailyGoalsProvider');
     return context;
 };

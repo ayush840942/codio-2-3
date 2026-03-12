@@ -12,7 +12,11 @@ export const javascriptLevels: PuzzleLevel[] = [
     isUnlocked: false,
     puzzleType: 'code-completion',
     xpReward: 20,
-    attempts: 0
+    attempts: 0,
+    theory: "JavaScript variables (var, let, const) are names for data. 'let' is for variables that change, 'const' is for values that stay the same.",
+    learningObjectives: ["Declare variables with let and const", "Understand basic data types"],
+    concepts: ["var vs let vs const", "Assignment operator (=)"],
+    practiceHints: ["Use let for values that change"]
   },
   {
     id: 17,
@@ -24,7 +28,11 @@ export const javascriptLevels: PuzzleLevel[] = [
     isUnlocked: false,
     puzzleType: 'code-completion',
     xpReward: 25,
-    attempts: 0
+    attempts: 0,
+    theory: "Functions are blocks of code designed to perform a particular task. They help keep code DRY (Don't Repeat Yourself).",
+    learningObjectives: ["Define functions", "Call functions with arguments"],
+    concepts: ["Function keyword", "Parameters vs Arguments", "Return"],
+    practiceHints: ["Focus on the function body logic"]
   },
   {
     id: 18,
@@ -36,7 +44,11 @@ export const javascriptLevels: PuzzleLevel[] = [
     isUnlocked: false,
     puzzleType: 'code-completion',
     xpReward: 25,
-    attempts: 0
+    attempts: 0,
+    theory: "Arrays are ordered lists of values. They are zero-indexed, meaning the first item is at index 0.",
+    learningObjectives: ["Create arrays", "Access elements by index", "Use array methods like push"],
+    concepts: ["Indexing", "Array.length", ".push()", ".pop()"],
+    practiceHints: ["Remember: indexes start at 0"]
   },
   {
     id: 19,
@@ -48,7 +60,11 @@ export const javascriptLevels: PuzzleLevel[] = [
     isUnlocked: false,
     puzzleType: 'code-completion',
     xpReward: 30,
-    attempts: 0
+    attempts: 0,
+    theory: "Loops like 'for' and 'while' allow you to run the same code multiple times with different values.",
+    learningObjectives: ["Write for-loops", "Iterate through arrays"],
+    concepts: ["Loop condition", "Incrementer", "Infinite loops"],
+    practiceHints: ["Check the loop condition carefully"]
   },
   {
     id: 20,
@@ -60,6 +76,10 @@ export const javascriptLevels: PuzzleLevel[] = [
     isUnlocked: false,
     puzzleType: 'code-completion',
     xpReward: 30,
-    attempts: 0
+    attempts: 0,
+    theory: "Objects are collections of properties (key-value pairs). They represent complex data structures.",
+    learningObjectives: ["Create object literals", "Access properties with dot notation"],
+    concepts: ["Key-value pairs", "Dot vs Bracket notation"],
+    practiceHints: ["Think of objects as models of real-world things"]
   }
 ];

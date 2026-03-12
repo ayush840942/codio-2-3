@@ -21,6 +21,8 @@ const config: Config = {
     extend: {
       fontFamily: {
         sans: [
+          'Itim',
+          'Patrick Hand',
           'Nunito',
           'Poppins',
           'ui-sans-serif',
@@ -33,7 +35,9 @@ const config: Config = {
           'Arial',
           'sans-serif'
         ],
+        draw: ['Patrick Hand', 'cursive'],
         display: [
+          'Itim',
           'Montserrat',
           'Poppins',
           'system-ui',
@@ -50,6 +54,11 @@ const config: Config = {
           'Courier New',
           'monospace'
         ]
+      },
+      borderWidth: {
+        '3': '3px',
+        '4': '4px',
+        'drawn': '2.5px',
       },
       colors: {
         border: 'hsl(var(--border))',
@@ -118,6 +127,23 @@ const config: Config = {
           easy: 'hsl(160 70% 45%)',
           medium: 'hsl(45 95% 55%)',
           hard: 'hsl(0 84% 60%)'
+        },
+        // Concept Capers inspired colors
+        cc: {
+          blue: '#8cccf2',
+          pink: '#f2a6c1',
+          green: '#a6f2c1',
+          yellow: '#f2e8a6',
+          purple: '#bca6f2',
+          orange: '#f2c1a6',
+        },
+        pastel: {
+          blue: '#E0F2FE',
+          pink: '#FCE7F3',
+          green: '#DCFCE7',
+          yellow: '#FEF9C3',
+          purple: '#F5F3FF',
+          orange: '#FFEDD5',
         }
       },
       borderRadius: {
@@ -134,6 +160,10 @@ const config: Config = {
         'soft': '0 4px 20px -4px rgba(0, 0, 0, 0.05)',
         'soft-lg': '0 8px 30px -6px rgba(0, 0, 0, 0.08)',
         'studypal': '0 10px 25px -5px rgba(0, 0, 0, 0.1)',
+        'comic': '4px 4px 0px 0px rgba(0, 0, 0, 0.15)',
+        'comic-sm': '2px 2px 0px 0px rgba(0, 0, 0, 0.15)',
+        'comic-lg': '8px 8px 0px 0px rgba(0, 0, 0, 0.15)',
+        'comic-hover': '6px 6px 0px 0px rgba(0, 0, 0, 0.2)',
       },
       keyframes: {
         'accordion-down': {
@@ -174,9 +204,17 @@ const config: Config = {
           '0%, 100%': { transform: 'translateY(0px)' },
           '50%': { transform: 'translateY(-10px)' }
         },
+        'float-slow': {
+          '0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
+          '50%': { transform: 'translateY(-20px) rotate(2deg)' }
+        },
         'wiggle': {
           '0%, 100%': { transform: 'rotate(-3deg)' },
           '50%': { transform: 'rotate(3deg)' }
+        },
+        'squishy': {
+          '0%, 100%': { transform: 'scale(1, 1)' },
+          '50%': { transform: 'scale(1.1, 0.9)' }
         }
       },
       animation: {
@@ -189,7 +227,9 @@ const config: Config = {
         'bounce-in': 'bounce-in 0.6s ease-out',
         'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
         'float': 'float 3s ease-in-out infinite',
-        'wiggle': 'wiggle 1s ease-in-out infinite'
+        'float-slow': 'float-slow 5s ease-in-out infinite',
+        'wiggle': 'wiggle 1s ease-in-out infinite',
+        'squishy': 'squishy 1.5s ease-in-out infinite'
       }
     }
   },

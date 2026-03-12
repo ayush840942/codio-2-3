@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import codioRobot from '@/assets/codio-robot.png';
+import ComicMascot from '@/components/ui/ComicMascot';
 import { Monitor, Smartphone, Laptop } from 'lucide-react';
 
 interface OnboardingFlowProps {
@@ -23,7 +23,8 @@ const ModernOnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => 
       id: 'welcome',
       title: 'Welcome to Codio!',
       subtitle: 'To build your personal curriculum, we will ask you a few questions.',
-      type: 'welcome' as const
+      type: 'welcome' as const,
+      pose: 'welcome' as const
     },
     {
       id: 'reason',
@@ -40,8 +41,8 @@ const ModernOnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => 
       id: 'learn',
       title: 'Learn to code',
       subtitle: 'Master the skills to read and write code, build apps and games, and advance your career',
+      pose: 'study' as const,
       type: 'info' as const,
-      icon: codioRobot
     },
     {
       id: 'describes',
@@ -123,7 +124,7 @@ const ModernOnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => 
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-[100dvh] bg-white flex flex-col">
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
         <AnimatePresence mode="wait">
           <motion.div
@@ -140,11 +141,10 @@ const ModernOnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => 
                 {steps.slice(1).map((_, idx) => (
                   <div
                     key={idx}
-                    className={`h-2 rounded-full transition-all duration-300 ${
-                      idx < currentStep ? 'w-2 bg-purple-600' : 
-                      idx === currentStep ? 'w-8 bg-purple-600' : 
-                      'w-2 bg-gray-300'
-                    }`}
+                    className={`h-2 rounded-full transition-all duration-300 ${idx < currentStep ? 'w-2 bg-purple-600' :
+                      idx === currentStep ? 'w-8 bg-purple-600' :
+                        'w-2 bg-gray-300'
+                      }`}
                   />
                 ))}
               </div>
@@ -153,14 +153,13 @@ const ModernOnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => 
             {/* Welcome Screen */}
             {currentStepData.type === 'welcome' && (
               <div className="text-center space-y-8">
-                <motion.img
-                  src={codioRobot}
-                  alt="Codio Robot"
-                  className="w-48 h-48 mx-auto"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.2, type: "spring" }}
-                />
+                <div className="w-48 h-48 mx-auto flex items-center justify-center">
+                  <ComicMascot
+                    pose="welcome"
+                    size="xl"
+                    animated={true}
+                  />
+                </div>
                 <div className="space-y-4">
                   <h1 className="text-3xl font-bold text-gray-900">
                     {currentStepData.title}
@@ -177,7 +176,7 @@ const ModernOnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => 
               <div className="text-center space-y-8">
                 {currentStepData.showLanguages ? (
                   <div className="relative flex items-center justify-center h-64">
-                    <img src={codioRobot} alt="Codio" className="w-32 h-32" />
+                    <ComicMascot pose="study" size="lg" />
                     <div className="absolute top-0 right-12">
                       <div className="text-4xl">JS</div>
                     </div>
@@ -208,13 +207,9 @@ const ModernOnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => 
                     <div className="text-6xl">🧑‍💻👩‍💻🧑‍💼</div>
                   </div>
                 ) : (
-                  <motion.img
-                    src={currentStepData.icon}
-                    alt="Codio"
-                    className="w-48 h-48 mx-auto"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                  />
+                  <div className="w-48 h-48 mx-auto flex items-center justify-center">
+                    <ComicMascot pose={currentStepData.pose || "welcome"} size="xl" />
+                  </div>
                 )}
                 <div className="space-y-4">
                   <h1 className="text-2xl font-bold text-gray-900">
@@ -233,7 +228,7 @@ const ModernOnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => 
                 <div className="space-y-6">
                   <div className="flex items-center justify-center gap-4">
                     <div className="text-5xl">🧑‍💻</div>
-                    <img src={codioRobot} alt="Codio" className="w-16 h-16" />
+                    <ComicMascot pose="winner" size="md" />
                     <div className="text-5xl">👩‍💻</div>
                   </div>
                 </div>
@@ -293,7 +288,7 @@ const ModernOnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => 
                 </h1>
                 <div className="space-y-8">
                   <div className="flex items-center justify-center">
-                    <img src={codioRobot} alt="Codio" className="w-32 h-32" />
+                    <ComicMascot pose="thinking" size="lg" />
                   </div>
                   <div className="space-y-4">
                     <div className="flex justify-between text-sm font-medium text-gray-600">
@@ -326,9 +321,9 @@ const ModernOnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => 
           onClick={handleNext}
           className="w-full py-6 text-lg font-semibold bg-purple-600 hover:bg-purple-700 text-white rounded-2xl"
         >
-          {currentStep === 0 ? "Let's go" : 
-           currentStep === steps.length - 1 ? 'Get started' : 
-           'Continue'}
+          {currentStep === 0 ? "Let's go" :
+            currentStep === steps.length - 1 ? 'Get started' :
+              'Continue'}
         </Button>
         {currentStep === 2 && (
           <button

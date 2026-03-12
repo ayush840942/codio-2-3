@@ -6,11 +6,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
 import { PuzzleLevel } from '@/context/GameContext';
-import { 
-  Lock, 
-  CheckCircle2, 
-  Play, 
-  Star, 
+import {
+  Lock,
+  CheckCircle2,
+  Play,
+  Star,
   Trophy,
   Code,
   Palette,
@@ -81,7 +81,7 @@ const LevelCard: React.FC<LevelCardProps> = ({ level, isUnlocked, canAccess, onP
 
   const handleCardClick = () => {
     playCardFlip();
-    
+
     if (!canAccess) {
       playError();
       return;
@@ -98,26 +98,25 @@ const LevelCard: React.FC<LevelCardProps> = ({ level, isUnlocked, canAccess, onP
   const handlePlayClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     playButtonPress();
-    
+
     if (!canAccess) {
       playError();
       return;
     }
-    
+
     onPlay(level.id);
   };
 
   return (
-    <Card 
-      className={`relative overflow-hidden transition-all duration-300 hover:shadow-lg transform hover:scale-[1.02] active:scale-95 cursor-pointer touch-manipulation ${
-        !canAccess 
-          ? 'opacity-60 grayscale' 
+    <Card
+      className={`relative overflow-hidden transition-all duration-300 hover:shadow-lg transform hover:scale-[1.02] active:scale-95 cursor-pointer touch-manipulation ${!canAccess
+          ? 'opacity-60 grayscale'
           : level.isCompleted
-          ? 'border-2 border-green-300 bg-gradient-to-br from-green-50 to-emerald-50'
-          : isUnlocked
-          ? 'border-2 border-puzzle-blue/30 bg-gradient-to-br from-blue-50 to-indigo-50 hover:border-puzzle-blue/50'
-          : 'border-gray-200 bg-gray-50'
-      }`}
+            ? 'border-2 border-green-300 bg-gradient-to-br from-green-50 to-emerald-50'
+            : isUnlocked
+              ? 'border-2 border-puzzle-blue/30 bg-gradient-to-br from-blue-50 to-indigo-50 hover:border-puzzle-blue/50'
+              : 'border-gray-200 bg-gray-50'
+        }`}
       onClick={handleCardClick}
     >
       {/* Background Pattern */}
@@ -150,13 +149,12 @@ const LevelCard: React.FC<LevelCardProps> = ({ level, isUnlocked, canAccess, onP
         {/* Level Header */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shadow-md ${
-              level.isCompleted 
-                ? 'bg-gradient-to-br from-green-400 to-emerald-500' 
+            <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shadow-md ${level.isCompleted
+                ? 'bg-gradient-to-br from-green-400 to-emerald-500'
                 : isUnlocked && canAccess
-                ? 'bg-gradient-to-br from-puzzle-blue to-puzzle-purple'
-                : 'bg-gray-300'
-            }`}>
+                  ? 'bg-gradient-to-br from-puzzle-blue to-puzzle-purple'
+                  : 'bg-gray-300'
+              }`}>
               <TopicIcon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
             </div>
             <div>
@@ -177,13 +175,13 @@ const LevelCard: React.FC<LevelCardProps> = ({ level, isUnlocked, canAccess, onP
 
         {/* Badges */}
         <div className="flex flex-wrap gap-2 mb-4">
-          <Badge 
-            variant="outline" 
+          <Badge
+            variant="outline"
             className={`text-xs border ${difficultyColors[level.difficulty]} font-medium`}
           >
             {level.difficulty.charAt(0).toUpperCase() + level.difficulty.slice(1)}
           </Badge>
-          
+
           <Badge variant="outline" className="text-xs border border-puzzle-purple/30 text-puzzle-purple bg-puzzle-purple/5 font-medium">
             {level.topic}
           </Badge>
@@ -197,7 +195,7 @@ const LevelCard: React.FC<LevelCardProps> = ({ level, isUnlocked, canAccess, onP
               {level.xpReward} XP
             </span>
           </div>
-          
+
           <div className="text-xs text-puzzle-gray/60 font-medium">
             {level.puzzleType?.replace('-', ' ')?.toUpperCase() || 'PUZZLE'}
           </div>
@@ -208,13 +206,12 @@ const LevelCard: React.FC<LevelCardProps> = ({ level, isUnlocked, canAccess, onP
           size="sm"
           onClick={handlePlayClick}
           disabled={!canAccess}
-          className={`w-full h-10 sm:h-12 font-semibold text-sm sm:text-base transition-all touch-manipulation active:scale-95 ${
-            level.isCompleted
+          className={`w-full h-10 sm:h-12 font-semibold text-sm sm:text-base transition-all touch-manipulation active:scale-95 ${level.isCompleted
               ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg'
               : isUnlocked && canAccess
-              ? 'bg-gradient-to-r from-puzzle-blue to-puzzle-purple hover:from-puzzle-purple hover:to-puzzle-pink text-white shadow-lg'
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-          }`}
+                ? 'bg-gradient-to-r from-puzzle-blue to-puzzle-purple hover:from-puzzle-purple hover:to-puzzle-pink text-white shadow-lg'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
         >
           <Play className="h-4 w-4 mr-2" />
           {level.isCompleted ? 'Replay' : !canAccess ? 'Locked' : 'Start Level'}

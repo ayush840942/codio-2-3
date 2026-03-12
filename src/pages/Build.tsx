@@ -8,15 +8,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
+import MobileHeader from '@/components/MobileHeader';
 
 const Build = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  
+
   const [activeTab, setActiveTab] = useState('html');
   const [viewMode, setViewMode] = useState<'mobile' | 'tablet' | 'desktop'>('mobile');
-  
+
   const [htmlCode, setHtmlCode] = useState(`<div class="container">
   <h1>Hello World!</h1>
   <p>Start building your project</p>
@@ -154,37 +155,27 @@ console.log('Hello from CodeZen!');`);
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border px-4 py-3">
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-              <ChevronLeft className="h-5 w-5" />
-            </Button>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Code className="h-4 w-4 text-primary" />
-              </div>
-              <span className="font-semibold">Build</span>
-            </div>
-          </div>
-          
+    <div className="min-h-[100dvh] bg-background">
+      {/* Unified Mobile Header */}
+      <MobileHeader
+        title="Build"
+        showBack
+        rightElement={
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={handleCopy}>
+            <Button variant="ghost" size="icon" onClick={handleCopy} className="text-black">
               <Copy className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={handleDownload}>
+            <Button variant="ghost" size="icon" onClick={handleDownload} className="text-black">
               <Download className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={handleReset}>
+            <Button variant="ghost" size="icon" onClick={handleReset} className="text-black">
               <RotateCcw className="h-4 w-4" />
             </Button>
           </div>
-        </div>
-      </div>
+        }
+      />
 
-      <div className={`max-w-7xl mx-auto p-4 ${isMobile ? 'space-y-4' : 'grid grid-cols-2 gap-6'}`}>
+      <div className={`max-w-7xl mx-auto p-4 ${isMobile ? 'space-y-4' : 'grid grid-cols-2 gap-6'}`} style={{ paddingTop: 'calc(var(--safe-area-top) + 4.5rem)' }}>
         {/* Code Editor */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -200,7 +191,7 @@ console.log('Hello from CodeZen!');`);
                   <TabsTrigger value="js" className="text-xs px-4">JS</TabsTrigger>
                 </TabsList>
               </div>
-              
+
               <div className="p-3">
                 <TabsContent value="html" className="mt-0">
                   <textarea
@@ -230,7 +221,7 @@ console.log('Hello from CodeZen!');`);
                   />
                 </TabsContent>
               </div>
-              
+
               <div className="px-3 pb-3">
                 <Button onClick={handleRun} className="w-full gap-2">
                   <Play className="h-4 w-4" />
@@ -278,7 +269,7 @@ console.log('Hello from CodeZen!');`);
                 </Button>
               </div>
             </div>
-            
+
             <div className="p-4 bg-muted/20 min-h-[320px] md:min-h-[400px] flex items-start justify-center">
               <div className={`${getPreviewSize()} h-full transition-all duration-300`}>
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-border/30">

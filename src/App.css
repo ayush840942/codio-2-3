@@ -1,8 +1,7 @@
-
 #root {
   max-width: 1280px;
   margin: 0 auto;
-  text-align: center;
+  width: 100%;
 }
 
 .logo {
@@ -11,9 +10,11 @@
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #9b87f5aa);
 }
+
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #7E69ABaa);
 }
@@ -22,6 +23,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -37,15 +39,33 @@
   padding: 2em;
   background: linear-gradient(225deg, #FFE29F 0%, #FFA99F 48%, #FF719A 100%);
   border-radius: 1.3rem;
-  box-shadow: 0 4px 32px 0 rgba(146,39,143,0.10), 0 2px 18px 0 rgba(234,172,232,0.09);
+  box-shadow: 0 4px 32px 0 rgba(146, 39, 143, 0.10), 0 2px 18px 0 rgba(234, 172, 232, 0.09);
   transition: box-shadow 0.3s;
 }
 
 .card:hover {
-  box-shadow: 0 12px 38px 0 rgba(146,39,143,0.18), 0 4px 20px 0 rgba(234,172,232,0.13);
+  box-shadow: 0 12px 38px 0 rgba(146, 39, 143, 0.18), 0 4px 20px 0 rgba(234, 172, 232, 0.13);
 }
 
 .read-the-docs {
   color: #888;
   font-style: italic;
+}
+
+.sticker-effect {
+  filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 4px rgba(255, 255, 255, 0.8));
+  transition: all 0.3s ease;
+}
+
+.sticker-effect:hover {
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 8px rgba(255, 255, 255, 1));
+  transform: scale(1.02);
+}
+
+.drop-shadow-sticker {
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.15)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.drop-shadow-glow {
+  filter: drop-shadow(0 0 8px rgba(96, 165, 250, 0.5));
 }

@@ -1,0 +1,100 @@
+{
+  "project_info": {
+    "project_number": "951939133229",
+    "project_id": "codio-71ecc",
+    "storage_bucket": "codio-71ecc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:951939133229:android:a3cf0873c68b6e8eab6da4",
+        "android_client_info": {
+          "package_name": "com.codio.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "951939133229-l01uidr2g6sgptvmskjdj8k1ls6pmmap.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.codio.app",
+            "certificate_hash": "4c0e339fae63abe2fcc4f575d5f1d664862c0bdf"
+          }
+        },
+        {
+          "client_id": "951939133229-etgc0s5sr5ssl9g4d3goikcn97ontdkc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDaKJDUO3K-CK-zq2zqp-BVhr_5v9SdDlo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "951939133229-5cd7on72l5e82qdluqjlo160kt95nle2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:951939133229:android:f81c0a7dac58b915ab6da4",
+        "android_client_info": {
+          "package_name": "web.codezen"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "951939133229-c1iu73vf2jikkfa5tfqu2o3mcjaotc8f.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "web.codezen",
+            "certificate_hash": "23d84bd3b62a47d4fe99b5577c024023179a7adc"
+          }
+        },
+        {
+          "client_id": "951939133229-efu11a70l6odbk7vpi9sfspqkifvh217.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "web.codezen",
+            "certificate_hash": "718e24444d48d71dae4942bc7181245b6c8d8a7a"
+          }
+        },
+        {
+          "client_id": "951939133229-v93l8g236k2lb0mvr95ju7b8beg9h898.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "web.codezen",
+            "certificate_hash": "4c0e339fae63abe2fcc4f575d5f1d664862c0bdf"
+          }
+        },
+        {
+          "client_id": "951939133229-etgc0s5sr5ssl9g4d3goikcn97ontdkc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDaKJDUO3K-CK-zq2zqp-BVhr_5v9SdDlo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "951939133229-5cd7on72l5e82qdluqjlo160kt95nle2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

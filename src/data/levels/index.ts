@@ -30,35 +30,52 @@ import { goLevels } from './goLevels';
 import { kotlinLevels } from './kotlinLevels';
 import { swiftLevels } from './swiftLevels';
 
-// Combine all levels and export them in progressive order (1-280)
+// Combine all levels and export them in logical 9-tier progression
 const allLevels = [
-  ...basicLevels,        // 1-6: Programming Fundamentals
-  ...htmlLevels,         // 7-11: HTML Basics
-  ...cssLevels,          // 12-16: CSS Styling
-  ...javascriptLevels,   // 17-21: JavaScript Fundamentals
-  ...reactLevels,        // 22-26: React Basics
-  ...pythonLevels,       // 27-36: Python Programming
-  ...typescriptLevels,   // 37-46: TypeScript
-  ...cppLevels,          // 47-56: C++ Programming
-  ...csharpLevels,       // 57-66: C# Programming
-  ...dartLevels,         // 67-76: Dart & Flutter
-  ...goLevels,           // 77-86: Go Programming
-  ...kotlinLevels,       // 87-96: Kotlin Programming
-  ...swiftLevels,        // 97-106: Swift Programming
-  ...advancedLevels,     // 107-121: Advanced Concepts
-  ...databaseLevels,     // 122-124: Database Fundamentals
-  ...dataStructuresLevels, // 125-137: Data Structures
-  ...algorithmsLevels,   // 138-142: Algorithms
-  ...webDevelopmentLevels, // 143-147: Web Development
-  ...testingLevels,      // 148-151: Testing
-  ...frameworkLevels,    // 152-156: Other Frameworks
-  ...mobileLevels,       // 157-161: Mobile Development
-  ...devOpsLevels,       // 162-166: DevOps & Infrastructure
-  ...securityLevels,     // 167-171: Security
-  ...performanceLevels,  // 172-176: Performance Optimization
-  ...aiMLLevels,         // 177-181: AI/ML
-  ...masteryLevels,      // 182-280: Master Level Challenges
-  ...backendLevels       // Remaining backend concepts
+  // 1. Fundamentals (Absolute Basics)
+  ...basicLevels,        // Basic Programming Fundamentals
+  ...htmlLevels,         // HTML Basics
+  ...cssLevels,          // CSS Styling
+
+  // 2. Core Logic (The "Thinker" Tools)
+  ...javascriptLevels,   // JS Fundamentals
+  ...pythonLevels,       // Python Basics
+
+  // 3. Modern Stack (Industry Standards)
+  ...typescriptLevels,   // TypeScript Logic
+  ...reactLevels,        // Modern UI Components
+
+  // 4. Programming Paradigms & Languages (Specialization)
+  ...cppLevels,          // Low-level C++
+  ...csharpLevels,       // C# & .NET Concepts
+  ...dartLevels,         // Dart & Flutter Logic
+  ...goLevels,           // Go Backends
+  ...kotlinLevels,       // Kotlin Android
+  ...swiftLevels,        // Swift iOS
+
+  // 5. Data & Logic (Computer Science Core)
+  ...dataStructuresLevels, // Stacks, Queues, etc.
+  ...algorithmsLevels,   // Sorting, Searching
+  ...databaseLevels,     // SQL & NoSQL Basics
+
+  // 6. Applied Engineering (Real World Apps)
+  ...backendLevels,      // APIs & Node.js
+  ...webDevelopmentLevels, // Advanced Web
+  ...mobileLevels,       // Native Mobile Concepts
+  ...testingLevels,      // Unit & Integration Testing
+
+  // 7. Systems & Architecture (The "Senior" Path)
+  ...frameworkLevels,    // Angular, Vue, etc.
+  ...advancedLevels,     // Complex Logic Concepts
+  ...performanceLevels,  // Optimization
+
+  // 8. Future Tech & Security (The Specialized Path)
+  ...devOpsLevels,       // CI/CD & Deploy
+  ...securityLevels,     // Hashing, Auth, etc.
+  ...aiMLLevels,         // Neural Nets & ML Basics
+
+  // 9. Mastery (The Final Boss)
+  ...masteryLevels       // Expert Challenges
 ];
 
 // Create proper sequential levels from 1 to 280

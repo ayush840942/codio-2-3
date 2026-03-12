@@ -7,7 +7,7 @@ export const basicLevels: PuzzleLevel[] = [
     title: "What is Programming?",
     description: "Learn the fundamentals of programming and how computers follow instructions",
     difficulty: "easy",
-    topic: "Programming Basics",
+    topic: "Basic Programming",
     isCompleted: false,
     isUnlocked: false,
     puzzleType: 'code-completion',
@@ -31,7 +31,7 @@ Every app on your phone, every website you visit, and every computer program you
     ],
     concepts: [
       "Instructions and algorithms",
-      "Programming languages", 
+      "Programming languages",
       "Computer logic",
       "Problem-solving approach"
     ],
@@ -46,7 +46,7 @@ Every app on your phone, every website you visit, and every computer program you
     title: "Your First Program",
     description: "Write your very first line of code and see it in action",
     difficulty: "easy",
-    topic: "Programming Basics",
+    topic: "Basic Programming",
     isCompleted: false,
     isUnlocked: false,
     puzzleType: 'code-completion',
@@ -86,10 +86,10 @@ This simple program teaches you the basic structure of code and gives you confid
   },
   {
     id: 3,
-    title: "Understanding Variables", 
+    title: "Understanding Variables",
     description: "Learn how to store and use information in your programs",
     difficulty: "easy",
-    topic: "Programming Basics",
+    topic: "Basic Programming",
     isCompleted: false,
     isUnlocked: false,
     puzzleType: 'code-completion',
@@ -132,8 +132,8 @@ Variables make programs flexible - instead of hardcoding values, you can store t
     id: 4,
     title: "Working with Numbers",
     description: "Explore how to perform calculations and work with numeric data",
-    difficulty: "easy", 
-    topic: "Programming Basics",
+    difficulty: "easy",
+    topic: "Basic Programming",
     isCompleted: false,
     isUnlocked: false,
     puzzleType: 'code-completion',
@@ -160,7 +160,7 @@ Real-world applications:
 • Processing financial data`,
     learningObjectives: [
       "Perform basic mathematical operations",
-      "Use variables in calculations", 
+      "Use variables in calculations",
       "Understand operator precedence",
       "Apply math to solve simple problems"
     ],
@@ -181,7 +181,7 @@ Real-world applications:
     title: "Making Decisions",
     description: "Learn how programs can make choices using conditional logic",
     difficulty: "easy",
-    topic: "Programming Basics", 
+    topic: "Basic Programming",
     isCompleted: false,
     isUnlocked: false,
     puzzleType: 'code-completion',
@@ -209,7 +209,7 @@ This allows programs to be intelligent and responsive to different situations.`,
     learningObjectives: [
       "Understand conditional logic and decision-making",
       "Learn if/else statement structure",
-      "Practice writing comparison conditions", 
+      "Practice writing comparison conditions",
       "Apply conditionals to real scenarios"
     ],
     concepts: [

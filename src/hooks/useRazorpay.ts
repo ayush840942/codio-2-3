@@ -79,7 +79,7 @@ export const useRazorpay = () => {
     return new Promise(async (resolve, reject) => {
       try {
         setLoading(true);
-        
+
         const scriptLoaded = await loadRazorpayScript();
         if (!scriptLoaded) {
           throw new Error("Failed to load payment system. Please refresh the page and try again.");
@@ -99,7 +99,7 @@ export const useRazorpay = () => {
             resolve(response);
           },
           modal: {
-            ondismiss: function() {
+            ondismiss: function () {
               console.log('Payment modal dismissed by user');
               setLoading(false);
               toast.info("Payment Cancelled", {
@@ -123,7 +123,7 @@ export const useRazorpay = () => {
           setLoading(false);
           const errorCode = response.error?.code || 'UNKNOWN';
           const errorDesc = response.error?.description || "Payment failed. Please try again.";
-          
+
           toast.error("Payment Failed", {
             description: `${errorDesc} (Error: ${errorCode})`
           });
@@ -138,13 +138,13 @@ export const useRazorpay = () => {
           });
           reject(new Error('Payment cancelled by user'));
         });
-        
+
         console.log('Opening Razorpay checkout with options:', {
           key: options.key,
           amount: options.amount,
           order_id: options.order_id
         });
-        
+
         rzp.open();
       } catch (error) {
         console.error('Error in processPayment:', error);

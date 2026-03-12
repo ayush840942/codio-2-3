@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, ChevronLeft, Sparkles, Code2, Trophy, Zap, Heart } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ChevronRight, ChevronLeft, Sparkles, Code2, Trophy, Zap, Star } from 'lucide-react';
+import { DrawnButton, DrawnCard } from '@/components/ui/HandDrawnComponents';
+import Logo from '@/components/ui/logo';
+import ComicMascot from '@/components/ui/ComicMascot';
+import { cn } from '@/lib/utils';
 
 interface OnboardingSlide {
     id: number;
@@ -10,53 +13,78 @@ interface OnboardingSlide {
     title: string;
     description: string;
     bgColor: string;
+    accentColor: string;
 }
 
 const SLIDES: OnboardingSlide[] = [
     {
         id: 1,
         icon: <div className="relative">
-            <Code2 className="w-20 h-20 text-slate-800" />
             <motion.div
                 animate={{ rotate: 360 }}
-                transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                className="absolute -inset-4 border-2 border-dashed border-slate-400 rounded-full"
+                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                className="absolute -inset-8 border-4 border-dashed border-black/20 rounded-full"
             />
+            <div className="relative w-48 h-48 flex items-center justify-center">
+                <ComicMascot pose="welcome" size="lg" />
+            </div>
         </div>,
         title: "Craft Your Future",
         description: "The world is built on code. We help you learn to write it, one puzzle at a time.",
-        bgColor: "bg-[#E0F2FE]", // Sky blue
+        bgColor: "bg-cc-blue",
+        accentColor: "bg-cc-pink"
     },
     {
         id: 2,
         icon: <div className="relative">
-            <Zap className="w-20 h-20 text-slate-800" />
             <motion.div
                 animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="absolute inset-0 bg-yellow-400/20 blur-xl rounded-full"
+                transition={{ duration: 3, repeat: Infinity }}
+                className="absolute -inset-4 bg-cc-yellow/30 blur-2xl rounded-full"
             />
+            <div className="relative w-48 h-48 flex items-center justify-center">
+                <ComicMascot pose="study" size="lg" />
+            </div>
         </div>,
         title: "Master Your Craft",
         description: "Real skills take time. Track your growth, build streaks, and conquer levels.",
-        bgColor: "bg-[#FEF9C3]", // Yellow
+        bgColor: "bg-cc-yellow",
+        accentColor: "bg-cc-green"
     },
     {
         id: 3,
         icon: <div className="relative">
-            <Trophy className="w-20 h-20 text-slate-800" />
             <motion.div
-                animate={{ y: [-5, 5, -5] }}
-                transition={{ duration: 3, repeat: Infinity }}
-                className="absolute -top-2 -right-2 text-2xl"
-            >
-                ⭐
-            </motion.div>
+                animate={{ y: [0, -15, 0] }}
+                transition={{ duration: 4, repeat: Infinity }}
+                className="absolute inset-0 bg-cc-pink/20 rounded-full blur-xl"
+            />
+            <div className="relative w-48 h-48 flex items-center justify-center">
+                <ComicMascot pose="winner" size="lg" />
+            </div>
         </div>,
-        title: "Join the Elite",
-        description: "Climb the global ranks. Show the world what you're capable of.",
-        bgColor: "bg-[#FCE7F3]", // Pink
+        title: "Earn Success",
+        description: "Every lesson learned is a win. Earn rewards, unlock badges, and rule the map!",
+        bgColor: "bg-cc-pink",
+        accentColor: "bg-cc-blue"
     },
+    {
+        id: 4,
+        icon: <div className="relative">
+            <motion.div
+                animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
+                transition={{ duration: 5, repeat: Infinity }}
+                className="absolute inset-0 bg-cc-green/20 rounded-full blur-xl"
+            />
+            <div className="relative w-32 h-32 flex items-center justify-center bg-cc-green border-4 border-black rounded-3xl shadow-comic -rotate-3">
+                <Sparkles className="w-16 h-16 text-black" strokeWidth={2.5} />
+            </div>
+        </div>,
+        title: "Total Coding Power",
+        description: "The most fun way to learn coding. Unlock your potential today!",
+        bgColor: "bg-cc-green",
+        accentColor: "bg-cc-yellow"
+    }
 ];
 
 const Onboarding: React.FC = () => {
@@ -90,137 +118,132 @@ const Onboarding: React.FC = () => {
             localStorage.setItem('codio_preferred_path', selectedInterest);
         }
         localStorage.setItem('codio_onboarding_complete', 'true');
-        navigate('/auth');
-    };
 
-    const goToLearn = () => {
-        if (selectedInterest) {
-            localStorage.setItem('codio_preferred_path', selectedInterest);
+        const hasSession = !!localStorage.getItem('supabase.auth.token') ||
+            localStorage.getItem('codio_guest_mode') === 'true';
+
+        if (hasSession) {
+            navigate('/');
+        } else {
+            navigate('/auth');
         }
-        localStorage.setItem('codio_onboarding_complete', 'true');
-        localStorage.setItem('codio_guest_mode', 'true');
-        navigate('/');
     };
 
     const slide = SLIDES[currentSlide];
 
     const INTERESTS = [
-        { id: 'web', title: 'Web Development', desc: 'HTML, CSS, JS, React', icon: '🌐', color: 'bg-blue-100' },
-        { id: 'mobile', title: 'Mobile Apps', desc: 'Swift, Kotlin, Flutter', icon: '📱', color: 'bg-purple-100' },
-        { id: 'backend', title: 'Backend Systems', desc: 'Python, Node, Go', icon: '⚙️', color: 'bg-green-100' },
+        { id: 'web', title: 'Web Development', desc: 'HTML, CSS, JS, React', icon: '🌐', color: 'bg-cc-blue' },
+        { id: 'mobile', title: 'Mobile Apps', desc: 'Swift, Kotlin, Flutter', icon: '📱', color: 'bg-cc-pink' },
+        { id: 'backend', title: 'Backend Systems', desc: 'Python, Node, Go', icon: '⚙️', color: 'bg-cc-green' },
     ];
 
     return (
-        <div className="min-h-screen bg-background flex flex-col overflow-hidden">
-            {/* Background cinematic gradient */}
-            <div className="fixed inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-blue-50/50 via-background to-background -z-10" />
+        <div className={cn("min-h-[100dvh] transition-colors duration-500 flex flex-col overflow-hidden font-draw relative", !showInterests ? slide.bgColor : "bg-white")}>
+            {/* Immersive Background Pattern */}
+            <div className="absolute inset-0 opacity-10 pointer-events-none"
+                style={{ backgroundImage: 'radial-gradient(circle, #000 1px, transparent 1px)', backgroundSize: '30px 30px' }} />
 
-            {/* Top Bar */}
-            <div className="flex justify-between items-center p-6">
-                <div className="font-black text-2xl tracking-tighter">CODIO</div>
-                <Button
-                    variant="ghost"
+            {/* Immersive Top Elements - Absolute positioned to float over backgrounds */}
+            <div className="absolute top-0 left-0 right-0 z-50 px-6 pt-[max(1rem,env(safe-area-inset-top))] flex justify-between items-center bg-gradient-to-b from-black/5 to-transparent pb-8">
+                <Logo size="sm" />
+                <button
                     onClick={handleSkip}
-                    className="text-slate-500 font-bold hover:bg-slate-100 rounded-full"
+                    className="text-black font-black uppercase text-xs tracking-widest bg-cc-yellow border-3 border-black px-4 py-2 rounded-xl shadow-comic-sm active:translate-y-0.5 transition-all hover:bg-cc-yellow/80 hover:scale-105"
                 >
                     Skip
-                </Button>
+                </button>
             </div>
 
-            {/* Main Content */}
-            <div className="flex-1 flex flex-col items-center justify-center px-8 relative">
+            {/* Main Content Area */}
+            <div className="flex-1 flex flex-col items-center justify-center px-6 pt-[calc(max(1rem,env(safe-area-inset-top))+4rem)] pb-8 relative z-10 overflow-hidden">
                 <AnimatePresence mode="wait">
                     {!showInterests ? (
                         <motion.div
                             key={`slide-${slide.id}`}
-                            initial={{ opacity: 0, y: 30, scale: 0.95 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: -30, scale: 0.95 }}
-                            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                            className="flex flex-col items-center text-center w-full max-w-sm"
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: -20 }}
+                            transition={{ type: "spring", damping: 15 }}
+                            className="w-full max-w-sm flex flex-col items-center"
                         >
-                            <motion.div
-                                initial={{ rotate: -10, scale: 0.8 }}
-                                animate={{ rotate: 0, scale: 1 }}
-                                transition={{ delay: 0.2, type: "spring", damping: 15 }}
-                                className={`w-48 h-48 ${slide.bgColor} rounded-[3rem] shadow-2xl flex items-center justify-center mb-12 relative overflow-hidden`}
-                            >
-                                <div className="absolute inset-0 bg-white/30 backdrop-blur-sm" />
-                                <div className="relative z-10">{slide.icon}</div>
-                            </motion.div>
+                            <div className="mb-8 relative">
+                                <motion.div
+                                    animate={{ y: [0, -10, 0] }}
+                                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                                >
+                                    {slide.icon}
+                                </motion.div>
+                            </div>
 
-                            <motion.h1
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.3 }}
-                                className="text-4xl font-black text-slate-900 mb-6 tracking-tight leading-tight"
-                            >
-                                {slide.title}
-                            </motion.h1>
+                            <DrawnCard className={cn("p-6 md:p-8 flex flex-col items-center text-center w-full", slide.accentColor)}>
+                                <h1 className="text-3xl md:text-4xl font-black text-black mb-3 uppercase tracking-tighter leading-none italic">
+                                    {slide.title}
+                                </h1>
 
-                            <motion.p
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.4 }}
-                                className="text-xl text-slate-500 font-semibold leading-relaxed"
-                            >
-                                {slide.description}
-                            </motion.p>
+                                <p className="text-base md:text-lg text-black/70 font-bold leading-tight">
+                                    {slide.description}
+                                </p>
+                            </DrawnCard>
                         </motion.div>
                     ) : (
                         <motion.div
                             key="interests"
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.9 }}
-                            transition={{ duration: 0.5, ease: "easeOut" }}
-                            className="flex flex-col items-center w-full max-w-sm"
+                            initial={{ opacity: 0, y: 50 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -50 }}
+                            className="w-full max-w-md"
                         >
-                            <h2 className="text-3xl font-black text-slate-900 mb-2">Your Path</h2>
-                            <p className="text-slate-500 font-bold mb-8">What would you like to build?</p>
+                            <DrawnCard className="p-6 md:p-8 bg-white border-4">
+                                <h2 className="text-3xl md:text-4xl font-black text-black mb-2 uppercase tracking-tight italic text-center">Your Path</h2>
+                                <p className="text-black/60 font-bold mb-6 text-center uppercase tracking-widest text-[10px] md:text-xs">What's your coding superpower?</p>
 
-                            <div className="w-full space-y-4">
-                                {INTERESTS.map((item) => (
-                                    <motion.div
-                                        key={item.id}
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        onClick={() => setSelectedInterest(item.id)}
-                                        className={`p-5 rounded-3xl border-2 cursor-pointer transition-all ${selectedInterest === item.id
-                                            ? 'border-slate-900 bg-slate-900 text-white shadow-xl'
-                                            : 'border-slate-100 bg-white hover:border-slate-200'
-                                            }`}
-                                    >
-                                        <div className="flex items-center gap-4">
-                                            <div className={`w-12 h-12 flex items-center justify-center text-2xl rounded-2xl ${selectedInterest === item.id ? 'bg-white/20' : item.color
-                                                }`}>
-                                                {item.icon}
-                                            </div>
-                                            <div className="flex-1 text-left">
-                                                <div className="font-black text-lg">{item.title}</div>
-                                                <div className={`text-sm font-bold ${selectedInterest === item.id ? 'text-white/70' : 'text-slate-400'
-                                                    }`}>
-                                                    {item.desc}
+                                <div className="space-y-3">
+                                    {INTERESTS.map((item) => (
+                                        <motion.div
+                                            key={item.id}
+                                            whileTap={{ scale: 0.98 }}
+                                            onClick={() => setSelectedInterest(item.id)}
+                                            className={cn(
+                                                "p-4 md:p-5 rounded-2xl md:rounded-3xl border-3 cursor-pointer transition-all shadow-comic-sm active:translate-y-1 active:shadow-none",
+                                                selectedInterest === item.id
+                                                    ? 'bg-black text-white border-black ring-4 ring-black/10'
+                                                    : cn('bg-white text-black border-black', item.color)
+                                            )}
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <div className="text-2xl md:text-3xl filter drop-shadow-[2px_2px_0_rgba(0,0,0,0.5)]">
+                                                    {item.icon}
+                                                </div>
+                                                <div className="flex-1 text-left">
+                                                    <div className="font-black text-lg md:text-xl uppercase tracking-tight leading-none">{item.title}</div>
+                                                    <div className={cn("text-[9px] md:text-[10px] font-bold uppercase tracking-widest mt-1",
+                                                        selectedInterest === item.id ? 'text-white/50' : 'text-black/40'
+                                                    )}>
+                                                        {item.desc}
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </motion.div>
-                                ))}
-                            </div>
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            </DrawnCard>
                         </motion.div>
                     )}
                 </AnimatePresence>
             </div>
 
-            {/* Footer */}
-            <div className="p-8 space-y-6">
+            {/* Immersive Footer - Floating over content */}
+            <div className="px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-4 relative z-10 w-full max-w-lg mx-auto space-y-4">
                 {!showInterests && (
-                    <div className="flex justify-center gap-2 mb-4">
+                    <div className="flex justify-center gap-3">
                         {SLIDES.map((_, index) => (
-                            <div
+                            <motion.div
                                 key={index}
-                                className={`h-1.5 rounded-full transition-all duration-500 ${index === currentSlide ? 'w-8 bg-slate-900' : 'w-2 bg-slate-200'
-                                    }`}
+                                className={cn(
+                                    "h-3 rounded-full border-2 border-black bg-white transition-all",
+                                    index === currentSlide ? 'w-8 bg-cc-yellow shadow-comic-sm' : 'w-3'
+                                )}
+                                animate={index === currentSlide ? { scale: [1, 1.2, 1] } : {}}
                             />
                         ))}
                     </div>
@@ -228,33 +251,30 @@ const Onboarding: React.FC = () => {
 
                 <div className="flex gap-4">
                     {(currentSlide > 0 || showInterests) && (
-                        <Button
+                        <DrawnButton
+                            variant="outlined"
                             onClick={handlePrev}
-                            variant="outline"
-                            className="h-16 px-8 rounded-3xl border-2 border-slate-100 font-black hover:bg-slate-50"
+                            className="h-14 w-14 px-0 bg-white border-3"
                         >
-                            <ChevronLeft className="w-6 h-6" />
-                        </Button>
+                            <ChevronLeft className="w-6 h-6" strokeWidth={4} />
+                        </DrawnButton>
                     )}
 
-                    {showInterests ? (
-                        <Button
-                            disabled={!selectedInterest}
-                            onClick={completeOnboarding}
-                            className="flex-1 h-16 rounded-3xl bg-slate-900 text-white font-black text-xl shadow-2xl hover:bg-slate-800 disabled:opacity-50 transition-all"
-                        >
-                            Get Started
-                            <Sparkles className="w-6 h-6 ml-2" />
-                        </Button>
-                    ) : (
-                        <Button
-                            onClick={handleNext}
-                            className="flex-1 h-16 rounded-3xl bg-slate-900 text-white font-black text-xl shadow-2xl hover:bg-slate-800 transition-all"
-                        >
-                            Next
-                            <ChevronRight className="w-6 h-6 ml-2" />
-                        </Button>
-                    )}
+                    <DrawnButton
+                        onClick={showInterests ? completeOnboarding : handleNext}
+                        disabled={showInterests && !selectedInterest}
+                        variant="accent"
+                        className={cn(
+                            "flex-1 h-14 md:h-16 text-xl md:text-2xl bg-cc-green shadow-comic border-3",
+                            showInterests && !selectedInterest && "opacity-50 grayscale"
+                        )}
+                    >
+                        {showInterests ? (
+                            <span className="flex items-center gap-2">BEGIN! <Sparkles className="w-6 h-6 md:w-8 md:h-8" /></span>
+                        ) : (
+                            <span className="flex items-center gap-2">NEXT <ChevronRight className="w-6 h-6 md:w-8 md:h-8" /></span>
+                        )}
+                    </DrawnButton>
                 </div>
             </div>
         </div>

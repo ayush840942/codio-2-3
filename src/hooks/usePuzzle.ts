@@ -8,13 +8,14 @@ import { usePuzzleSolution } from './puzzle/usePuzzleSolution';
 
 export const usePuzzle = (levelId: string) => {
   const { gameState } = useGame();
-  
+
   const [currentPuzzle, setCurrentPuzzle] = useState<any>(null);
   const [showSolution, setShowSolution] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [attempts, setAttempts] = useState(0);
   const [showCelebration, setShowCelebration] = useState(false);
-  
+  const [codeError, setCodeError] = useState<string | null>(null);
+
   const {
     availableBlocks,
     setAvailableBlocks,
@@ -36,19 +37,19 @@ export const usePuzzle = (levelId: string) => {
   const currentLevel = gameState.levels.find(level => level.id === levelIdNum);
 
   usePuzzleLoader(levelIdNum, {
-    setCurrentPuzzle, setAvailableBlocks, setPlacedBlocks, setFeedback, 
-    setShowSolution, setShowHint, setAttempts, setShowCelebration, 
-    setCodeOutput, setConsoleOutput
+    setCurrentPuzzle, setAvailableBlocks, setPlacedBlocks, setFeedback,
+    setShowSolution, setShowHint, setAttempts, setShowCelebration,
+    setCodeOutput, setConsoleOutput, setCodeError
   });
 
   const verificationState = { currentPuzzle, placedBlocks, levelIdNum };
-  const verificationSetters = { setCodeOutput, setConsoleOutput, setFeedback, setShowCelebration, setAttempts };
+  const verificationSetters = { setCodeOutput, setConsoleOutput, setFeedback, setShowCelebration, setAttempts, setCodeError };
   const { runCode, handleVerifySolution } = usePuzzleVerification(verificationState, verificationSetters);
-  
+
   const solutionState = { currentPuzzle, availableBlocks };
-  const solutionSetters = { 
-    setShowSolution, setAvailableBlocks, setPlacedBlocks, setFeedback, 
-    resetPuzzleState, setShowCelebration, setAttempts 
+  const solutionSetters = {
+    setShowSolution, setAvailableBlocks, setPlacedBlocks, setFeedback,
+    resetPuzzleState, setShowCelebration, setAttempts
   };
   const { handleShowSolution, resetPuzzle } = usePuzzleSolution(solutionState, solutionSetters);
 
@@ -64,6 +65,7 @@ export const usePuzzle = (levelId: string) => {
     consoleOutput,
     showCelebration,
     codeOutput,
+    codeError,
     handleBlockClick,
     handleBlockDataClick,
     handleRemoveBlock,

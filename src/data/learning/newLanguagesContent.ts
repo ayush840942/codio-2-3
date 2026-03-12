@@ -1,6 +1,6 @@
-
 import { LevelLearningContent, LearningConcept } from './types';
 import { Code, Cpu, Smartphone, Zap, Box, Terminal, Layers, Globe } from 'lucide-react';
+import { humorService } from './humorService';
 
 // C++ Learning Content Generator
 export const generateCppContent = (levelId: number, topic: string): LevelLearningContent => {
@@ -170,58 +170,63 @@ export const generateDartContent = (levelId: number, topic: string): LevelLearni
 
 // Python Learning Content Generator
 export const generatePythonContent = (levelId: number, topic: string): LevelLearningContent => {
+  const isAdvanced = levelId > 100;
+  const story = humorService.getStoryBeat(levelId);
+  const joke = humorService.getJoke('Python');
+  const metaphor = humorService.getMetaphor(topic);
+
   return {
     title: `Python: ${topic}`,
     topic: 'Python',
     icon: Terminal,
-    introduction: `Master ${topic} in Python, the world's most popular programming language for AI, data science, and web development.`,
+    introduction: story.intro,
     pages: [
       {
-        title: `Python Basics: ${topic}`,
-        content: `Python is known for its readable syntax and versatility. ${topic} is fundamental to becoming a Python developer.`,
+        title: `The Mission: ${topic}`,
+        content: `Alright, future AI Architect. Today we're tackling ${topic}. ${metaphor} \n\n${joke}`,
         concepts: [
           {
             name: topic,
-            description: `Learn ${topic} the Python way`,
+            description: `How ${topic} helps us build the ultimate AI companion.`,
             example: getPythonExample(topic),
             tips: getPythonTips(topic)
           }
         ],
         visualExample: getPythonExample(topic),
-        practiceHint: 'Python makes coding fun!'
+        practiceHint: 'Python is all about clean air! (Indent correctly or it wont breathe)'
       },
       {
-        title: 'Pythonic Patterns',
-        content: `Python emphasizes code readability. Let's explore ${topic} using Pythonic patterns.`,
+        title: 'Pythonic Mastery',
+        content: `In the world of Python, we don't just write code, we write poetry. Let's make ${topic} look so clean, it sparkles.`,
         concepts: [
           {
-            name: 'List Comprehensions',
-            description: 'Elegant way to create lists',
-            example: 'squares = [x**2 for x in range(10)]',
-            tips: ['More readable than loops', 'Can include conditions']
-          }
-        ],
-        visualExample: getPythonExample(topic),
-        practiceHint: 'Write Pythonic code!'
-      },
-      {
-        title: 'Real Applications',
-        content: `Apply ${topic} in data analysis, machine learning, or web development with Django/Flask.`,
-        concepts: [
-          {
-            name: topic,
-            description: `${topic} in production Python`,
+            name: 'Pro Tip',
+            description: `Secret techniques for ${topic}.`,
             example: getPythonExample(topic),
-            tips: ['Used in AI/ML', 'Powers data science workflows']
+            tips: ['Keep it Simple, Serpent (KISS)', 'Follow the Zen of Python']
           }
         ],
         visualExample: getPythonExample(topic),
-        practiceHint: 'Build something amazing!'
+        practiceHint: 'Use list comprehensions to feel like a wizard.'
+      },
+      {
+        title: 'Project Update',
+        content: `Our AI is starting to recognize ${topic}. We're one step closer to the singularity!`,
+        concepts: [
+          {
+            name: 'Implementation',
+            description: `Where ${topic} shines in our AI assistant.`,
+            example: getPythonExample(topic),
+            tips: ['Check the docs, they are your best friends']
+          }
+        ],
+        visualExample: getPythonExample(topic),
+        practiceHint: 'Build it, run it, love it.'
       }
     ],
-    summary: `Fantastic! You've mastered ${topic} in Python. The possibilities are endless!`,
-    objectives: [`Understand ${topic}`, 'Write Pythonic code', 'Apply in real projects'],
-    learningObjectives: [`Use ${topic} in Python applications`]
+    summary: story.outro,
+    objectives: [`Master ${topic}`, 'Add more brainpower to our AI', 'Avoid syntax errors like a pro'],
+    learningObjectives: [`Mastery of ${topic} in Python`]
   };
 };
 
@@ -509,13 +514,37 @@ function getDartTips(topic: string): string[] {
 
 function getPythonExample(topic: string): string {
   const examples: Record<string, string> = {
-    'Variables': 'name = "Pythonista"\nage = 25\nis_developer = True\nprint(f"{name} is {age} years old")',
-    'Functions': 'def greet(name, greeting="Hello"):\n    return f"{greeting}, {name}!"\n\nprint(greet("World"))',
-    'Classes': 'class Player:\n    def __init__(self, name):\n        self.name = name\n        self.score = 0\n    \n    def add_points(self, pts):\n        self.score += pts',
-    'Lists': 'numbers = [1, 2, 3, 4, 5]\nsquares = [x**2 for x in numbers]\nprint(squares)  # [1, 4, 9, 16, 25]',
-    'Dictionaries': 'player = {\n    "name": "Hero",\n    "level": 10,\n    "items": ["sword", "shield"]\n}\nprint(player["name"])'
+    // Beginner
+    'Variables': 'name = "Pythonista"\nage = 25\nprint(f"{name} is {age}")',
+    'Data Types': 'x = 5 # int\ny = 5.0 # float\nz = "5" # str\na = True # bool',
+    'Lists': 'fruits = ["apple", "banana"]\nfruits.append("cherry")\nprint(fruits[0])',
+    'Dictionaries': 'user = {"name": "Alice", "age": 30}\nprint(user["name"])',
+    'Strings': 'msg = "Hello World"\nprint(msg.upper())\nprint(msg[0:5])',
+    // Control Flow
+    'If Statements': 'x = 10\nif x > 5:\n    print("Big")\nelif x == 5:\n    print("Equal")\nelse:\n    print("Small")',
+    'For Loops': 'for item in ["a", "b", "c"]:\n    print(item)',
+    'While Loops': 'count = 0\nwhile count < 5:\n    print(count)\n    count += 1',
+    // Functions
+    'Defining Functions': 'def greet(name="User"):\n    return f"Hello, {name}"\n\nprint(greet("Alice"))',
+    'Lambda Functions': 'add = lambda x, y: x + y\nprint(add(5, 3))',
+    'List Comprehensions': 'squares = [x**2 for x in range(10)]\nprint(squares)',
+    // OOP
+    'Classes & Objects': 'class Player:\n    def __init__(self, name):\n        self.name = name\n        self.score = 0\n\np1 = Player("Hero")',
+    'Inheritance': 'class Animal:\n    def speak(self):\n        print("Sound")\n\nclass Dog(Animal):\n    def speak(self):\n        print("Woof")',
+    // Advanced
+    'Decorators': 'def logger(func):\n    def wrapper(*args):\n        print(f"Calling {func.__name__}")\n        return func(*args)\n    return wrapper\n\n@logger\ndef add(a, b): return a + b',
+    'Generators': 'def my_gen():\n    yield 1\n    yield 2\n\ng = my_gen()\nprint(next(g))',
+    'Context Managers (with)': 'with open("test.txt", "w") as f:\n    f.write("Hello World")',
+    // Real World
+    'Web Scraping (BeautifulSoup)': 'from bs4 import BeautifulSoup\nsoup = BeautifulSoup("<h1>Hi</h1>", "html.parser")\nprint(soup.h1.string)',
+    'API Requests (Requests)': 'import requests\nr = requests.get("https://api.github.com")\nprint(r.json())',
+    'Pandas Basics': 'import pandas as pd\ndf = pd.DataFrame({"A": [1, 2], "B": [3, 4]})\nprint(df.head())'
   };
-  return examples[topic] || `# ${topic} in Python\nprint("Hello Python!")`;
+
+  if (examples[topic]) return examples[topic];
+
+  // Dynamic fallback
+  return `# Python Content: ${topic}\n# Dive into the world of ${topic}\nprint("Learning ${topic} in Python!")\n# Example code would go here`;
 }
 
 function getPythonTips(topic: string): string[] {

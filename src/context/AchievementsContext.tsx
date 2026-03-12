@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { ACHIEVEMENTS, Achievement } from '@/data/achievements';
 import { useGame } from './GameContext';
+import { useRewards } from './RewardsContext';
 import { useStreak } from './StreakContext';
 import { toast } from 'sonner';
 
@@ -18,6 +19,7 @@ const AchievementsContext = createContext<AchievementsContextType | undefined>(u
 export const AchievementsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [unlockedAchievements, setUnlockedAchievements] = useState<string[]>([]);
     const { gameState } = useGame();
+    const { rewards } = useRewards();
     const { currentStreak, longestStreak } = useStreak();
 
     // Load unlocked achievements from localStorage
@@ -48,11 +50,11 @@ export const AchievementsProvider: React.FC<{ children: React.ReactNode }> = ({ 
             case 'levels':
                 return gameState.levels.filter(l => l.isCompleted).length;
             case 'xp':
-                return gameState.xp;
+                return rewards?.xp || 0;
             default:
                 return 0;
         }
-    }, [currentStreak, longestStreak, gameState.levels, gameState.xp]);
+    }, [currentStreak, longestStreak, gameState.levels, rewards?.xp]);
 
     const checkAchievements = useCallback(() => {
         const newUnlocked: string[] = [];
@@ -75,7 +77,7 @@ export const AchievementsProvider: React.FC<{ children: React.ReactNode }> = ({ 
     // Check achievements on relevant state changes
     useEffect(() => {
         checkAchievements();
-    }, [gameState.xp, currentStreak, gameState.levels]);
+    }, [rewards?.xp, currentStreak, gameState.levels]);
 
     const getAchievementProgress = useCallback((achievementId: string): number => {
         const achievement = ACHIEVEMENTS.find(a => a.id === achievementId);

@@ -199,7 +199,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }, [htmlCode, cssCode, jsCode]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-3 md:p-6">
+    <div className="min-h-[100dvh] bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-3 md:p-6">
       <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
         {/* Modern Header */}
         <motion.div

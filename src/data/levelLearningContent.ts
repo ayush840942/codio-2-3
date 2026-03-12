@@ -3,19 +3,17 @@ import { LevelLearningContent } from '@/data/learning/types';
 import { generateLevelLearningContent } from '@/data/learning/levelLearningContentGenerator';
 import { createBeginnerLearningContent } from '@/data/learning/beginnerLearningPath';
 
-// Generate learning content for all levels
+
+// Generate learning content for all levels using the main generator
+// The generator already has detailed level-specific content for levels 1-21
+// and dynamic puzzle-contextual content for all other levels
 export const levelLearningContent: Record<string, LevelLearningContent> = {};
 
 // Generate content for levels 1-200
 for (let i = 1; i <= 200; i++) {
-  // Use detailed beginner content for levels 1-50
-  if (i <= 50) {
-    levelLearningContent[i.toString()] = createBeginnerLearningContent(i);
-  } else {
-    // Use generated content for advanced levels
-    levelLearningContent[i.toString()] = generateLevelLearningContent(i);
-  }
+  levelLearningContent[i.toString()] = generateLevelLearningContent(i);
 }
+
 
 // Default fallback content
 levelLearningContent.default = {

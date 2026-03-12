@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/context/AuthContext';
 import { useGame } from '@/context/GameContext';
+import { useRewards } from '@/context/RewardsContext';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Star, Sparkles } from 'lucide-react';
 import Logo from '@/components/ui/logo';
@@ -20,6 +21,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
 }) => {
   const { user, profile } = useAuth();
   const { gameState } = useGame();
+  const { rewards } = useRewards();
   const navigate = useNavigate();
 
   const getInitials = () => {
@@ -37,111 +39,87 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   };
 
   return (
-    <motion.header 
-      className="bg-card/60 backdrop-blur-xl border-b border-border/30 sticky top-0 z-50"
+    <motion.header
+      className="bg-white/90 backdrop-blur-md border-b-4 border-black sticky top-0 z-50 shadow-comic-sm"
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.4 }}
     >
-      <div className="flex items-center justify-between px-4 py-3">
+      <div className="flex items-center justify-between px-6 py-4">
         {/* Left Section */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           {showBackButton && (
             <motion.div whileTap={{ scale: 0.9 }}>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleBackClick} 
-                className="w-10 h-10 p-0 rounded-xl bg-secondary/50"
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleBackClick}
+                className="w-12 h-12 p-0 rounded-xl border-3 border-black bg-white shadow-comic-sm hover:bg-cc-yellow/20"
               >
-                <ChevronLeft className="h-5 w-5" />
+                <ChevronLeft className="h-6 w-6 text-black" strokeWidth={3} />
               </Button>
             </motion.div>
           )}
-          
+
           {!showBackButton && (
-            <motion.div 
-              className="flex items-center gap-2"
+            <motion.div
+              className="flex items-center gap-2 relative"
               whileTap={{ scale: 0.97 }}
             >
-              <Logo size="sm" showText={true} />
+              <Logo size="sm" showText={true} className="relative z-10" />
             </motion.div>
           )}
-          
+
           {title && (
-            <h1 className="text-lg font-semibold text-foreground">{title}</h1>
+            <h1 className="text-xl font-black text-black uppercase tracking-tighter ml-2">{title}</h1>
           )}
         </div>
 
         {/* Right Section */}
-        <div className="flex items-center gap-2">
-          {/* XP Counter - 3D Style */}
-          <motion.div 
-            className="relative flex items-center gap-1.5 bg-gradient-to-r from-amber-100 to-yellow-100 px-3 py-2 rounded-2xl shadow-sm border border-amber-200/50"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+        <div className="flex items-center gap-3">
+          {/* XP Counter - Comic Style */}
+          <motion.div
+            className="relative flex items-center gap-2 bg-cc-yellow border-3 border-black px-4 py-2 rounded-xl shadow-comic-sm rotate-1"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
-            {/* Glow effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-amber-400/10 to-yellow-400/10 rounded-2xl" />
-            
-            <motion.div 
-              className="relative w-6 h-6 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-md"
-              animate={{
-                scale: [1, 1.1, 1],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            >
-              <Star className="h-3.5 w-3.5 text-white fill-white" />
-            </motion.div>
-            <span className="relative text-sm font-bold text-amber-700">
-              {gameState.xp || 0}
+            <Star className="h-4 w-4 text-black fill-black" strokeWidth={3} />
+            <span className="text-sm font-black text-black">
+              {rewards.xp || 0} XP
             </span>
           </motion.div>
 
           {/* Notification Center */}
-          <NotificationCenter />
+          <div className="relative z-10">
+            <NotificationCenter />
+          </div>
 
-          {/* Profile Avatar - 3D Style */}
-          <motion.div 
-            whileTap={{ scale: 0.95 }}
-            whileHover={{ scale: 1.05 }}
-            className="relative"
+          {/* Profile Avatar - Card Style */}
+          <motion.div
+            whileTap={{ scale: 0.9 }}
+            whileHover={{ scale: 1.1, rotate: -3 }}
+            className="relative w-11 h-11"
           >
-            {/* Glow ring */}
-            <div className="absolute inset-0 bg-gradient-to-br from-primary to-purple-600 rounded-full blur-sm opacity-30 scale-110" />
-            
-            <Avatar 
-              className="relative h-10 w-10 cursor-pointer border-2 border-white shadow-lg" 
+            <div className="absolute inset-0 bg-black rounded-xl translate-x-0.5 translate-y-0.5" />
+            <div
+              className="relative w-full h-full rounded-xl border-3 border-black bg-white overflow-hidden cursor-pointer"
               onClick={handleProfileClick}
             >
               {profile?.avatar_url ? (
-                <AvatarImage 
-                  src={profile.avatar_url} 
-                  alt={profile?.username || 'User Avatar'} 
-                  className="object-cover" 
+                <img
+                  src={profile.avatar_url}
+                  alt={profile?.username || 'User Avatar'}
+                  className="w-full h-full object-cover"
                 />
               ) : (
-                <AvatarFallback className="bg-gradient-to-br from-primary to-purple-600 text-white text-sm font-bold">
+                <div className="w-full h-full bg-cc-pink flex items-center justify-center text-black font-black text-lg">
                   {getInitials()}
-                </AvatarFallback>
+                </div>
               )}
-            </Avatar>
-            
+            </div>
+
             {/* Online indicator */}
-            <motion.div
-              className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-400 rounded-full border-2 border-white shadow-sm"
-              animate={{
-                scale: [1, 1.2, 1],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-              }}
-            />
+            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-cc-green rounded-full border-2 border-black shadow-comic-sm" />
           </motion.div>
         </div>
       </div>

@@ -10,7 +10,7 @@ export const subscriptionPlans: Plan[] = [
     originalPrice: 0,
     period: 'month',
     features: [
-      { name: 'Access to first 20 levels', included: true },
+      { name: 'Access to first 50 levels', included: true },
       { name: 'Basic HTML & CSS lessons', included: true },
       { name: 'Community support', included: true },
       { name: 'Basic progress tracking', included: true },
@@ -27,7 +27,7 @@ export const subscriptionPlans: Plan[] = [
     id: 'premium-monthly',
     name: 'Premium Monthly',
     description: 'Unlock your full coding potential with monthly billing',
-    price: 499,
+    price: 299,
     originalPrice: 499,
     period: 'month',
     features: [
@@ -50,7 +50,7 @@ export const subscriptionPlans: Plan[] = [
     id: 'premium-yearly',
     name: 'Premium Yearly',
     description: 'Best value! Get all premium features with yearly billing and save 40%',
-    price: 3599,
+    price: 1999,
     originalPrice: 5988,
     period: 'year',
     discount: 40,
@@ -74,7 +74,7 @@ export const subscriptionPlans: Plan[] = [
     id: 'pro-monthly',
     name: 'Pro Monthly',
     description: 'For serious developers who want advanced features',
-    price: 799,
+    price: 499,
     originalPrice: 799,
     period: 'month',
     features: [

@@ -1,51 +1,27 @@
-
 import { LevelLearningContent } from './types';
 import { getExampleForLevel, getAdvancedExample } from './exampleGenerators';
 import { FileText, Palette, Zap, Layers, Cpu, Database, Rocket } from 'lucide-react';
 import { TopicConfig } from './levelTopics';
+import { humorService } from './humorService';
 
 // Helper function to generate comprehensive theory content
 const generateTheoryContent = (levelId: number, subject: string, topic: TopicConfig): string => {
+  const story = humorService.getStoryBeat(levelId);
+  const joke = humorService.getJoke(subject);
+  const metaphor = humorService.getMetaphor(topic.title);
+
   const theories = {
     'HTML': {
-      basic: `HTML (HyperText Markup Language) is the foundation of web development. Understanding ${topic.title.toLowerCase()} is crucial for creating semantic, accessible web content. This concept involves understanding how HTML elements work together to structure content meaningfully.
-
-Core principles include semantic markup, proper nesting of elements, and accessibility considerations. HTML elements are the building blocks that define the structure and meaning of web content, not its appearance.
-
-The theory behind ${topic.title.toLowerCase()} encompasses understanding when and why to use specific elements, how they interact with CSS and JavaScript, and their impact on SEO and accessibility.`,
-      advanced: `Advanced HTML theory delves into the semantic web, microdata, and modern HTML5 features. ${topic.title} represents a sophisticated understanding of how browsers parse and render HTML, including the document object model (DOM) and how elements cascade through inheritance.
-
-Performance considerations include understanding how HTML structure affects page loading, critical rendering path, and browser optimization strategies. Modern HTML also involves understanding Web Components, Shadow DOM, and how HTML integrates with modern JavaScript frameworks.`
+      basic: `${story.intro}\n\nListen, HTML is just the skeleton of your site. Without it, you're just floating text in the void. ${topic.title} is like giving your site a spine. \n\n${joke}\n\nThink of it this way: ${metaphor}`,
+      advanced: `Alright, veteran. You're diving into the deep end of HTML: ${topic.title}. This is where we stop just making 'pages' and start making 'engines'. \n\n${joke}`
     },
     'CSS': {
-      basic: `CSS (Cascading Style Sheets) theory is built on the concept of separation of concerns - separating presentation from content. ${topic.title} involves understanding the cascade, specificity, and inheritance principles that govern how styles are applied.
-
-The box model is fundamental to CSS theory, explaining how elements are rendered with content, padding, border, and margin areas. Understanding the visual formatting model helps predict how elements will be positioned and displayed.
-
-CSS theory also encompasses understanding different layout methods, from normal flow to flexbox and grid, and how they solve different layout challenges.`,
-      advanced: `Advanced CSS theory involves understanding the CSS Object Model (CSSOM), how browsers parse and apply styles, and performance implications of different CSS patterns. ${topic.title} requires deep knowledge of rendering optimization, critical CSS, and modern CSS features.
-
-Layout algorithms like flexbox and grid involve complex mathematical calculations for space distribution and alignment. Understanding these algorithms helps write more efficient and predictable CSS code.`
+      basic: `Time to paint! ${topic.title} is how we make our 'skeleton' look less like a spooky ghost and more like a high-fashion model. \n\n${joke}\n\n${metaphor}`,
+      advanced: `Advanced styling mode! We're talking algorithms, layout engines, and performance. ${topic.title} will make your site fly. \n\n${joke}`
     },
     'JavaScript': {
-      basic: `JavaScript theory is rooted in understanding the language's core concepts: dynamic typing, prototypal inheritance, and the event-driven programming model. ${topic.title} involves understanding how JavaScript executes code, manages memory, and handles asynchronous operations.
-
-The execution context and scope chain are fundamental concepts that determine how variables and functions are accessed. Understanding closures, hoisting, and the this keyword are essential for writing predictable JavaScript code.
-
-Event-driven programming theory explains how JavaScript responds to user interactions and system events, forming the basis for interactive web applications.`,
-      advanced: `Advanced JavaScript theory encompasses understanding the event loop, call stack, and task queue that govern asynchronous execution. ${topic.title} requires knowledge of how JavaScript engines optimize code execution and manage memory.
-
-Modern JavaScript theory includes understanding modules, promises, async/await, and how these patterns solve callback hell and improve code organization. Understanding the prototype chain and how it relates to modern class syntax is crucial for object-oriented programming in JavaScript.`
-    },
-    'React': {
-      basic: `React theory is built on the concept of declarative UI programming and the virtual DOM. ${topic.title} involves understanding how React manages component state and efficiently updates the user interface through reconciliation.
-
-The component lifecycle and unidirectional data flow are core theoretical concepts that govern how React applications behave. Understanding props vs state, and when to use each, is fundamental to React development.
-
-React's theory emphasizes composition over inheritance, encouraging developers to build complex UIs from simple, reusable components.`,
-      advanced: `Advanced React theory involves understanding the reconciliation algorithm, fiber architecture, and how React prioritizes updates for optimal performance. ${topic.title} requires deep knowledge of React's internals and optimization strategies.
-
-Understanding concurrent rendering, suspense, and how React handles side effects through hooks provides the theoretical foundation for building scalable React applications.`
+      basic: `JavaScript makes things MOVE. ${topic.title} is the brainpower behind the beauty. \n\n${joke}\n\n${metaphor}`,
+      advanced: `The professional zone. We're handling the event loop, async patterns, and memory. ${topic.title} is for the masters. \n\n${joke}`
     }
   };
 
@@ -62,17 +38,17 @@ Understanding the underlying principles helps developers make informed decisions
 // Helper function to generate detailed content structure
 export const generateDetailedContent = (levelId: number, subject: string, icon: any, topic: TopicConfig): LevelLearningContent => {
   const theoryContent = generateTheoryContent(levelId, subject, topic);
-  
+
   return {
     title: `${topic.title} - Level ${levelId}`,
     topic: subject,
     icon: icon,
-    introduction: `Level ${levelId}: Master ${topic.title} with comprehensive, hands-on learning. Focus: ${topic.focus}`,
+    introduction: humorService.getStoryBeat(levelId).intro,
     theory: theoryContent,
     pages: [
       {
-        title: `Theory: ${topic.title}`,
-        content: `Welcome to Level ${levelId}! Let's start with the theoretical foundation of ${topic.title.toLowerCase()}.`,
+        title: `Cheat Sheet: ${topic.title}`,
+        content: `Alright, let's break down ${topic.title.toLowerCase()}. Don't worry, it's easier than trying to find a matching pair of socks in the laundry.`,
         theory: theoryContent,
         concepts: [
           {
@@ -128,20 +104,18 @@ export const generateDetailedContent = (levelId: number, subject: string, icon: 
         practiceHint: `Apply your complete knowledge to solve the upcoming puzzle challenge.`
       }
     ],
-    summary: `Congratulations! You've achieved mastery in ${topic.title}. You understand the theory, fundamentals, practical implementation, and are ready for professional-level challenges.`,
+    summary: humorService.getStoryBeat(levelId).outro,
     objectives: [
-      `Understand ${topic.title} theory and principles`,
-      `Master ${topic.title} fundamentals`,
-      'Implement industry-standard patterns',
-      'Apply advanced techniques',
-      'Write production-quality code'
+      `Actually understand ${topic.title} (No, really)`,
+      `Write code that doesn't make the compiler cry`,
+      'Become a coding legend',
     ]
   };
 };
 
 export const generateHTMLContent = (levelId: number, topic: TopicConfig): LevelLearningContent => {
   const theoryContent = generateTheoryContent(levelId, 'HTML', topic);
-  
+
   return {
     title: `${topic.title} - Level ${levelId}`,
     topic: 'HTML',
@@ -220,7 +194,7 @@ export const generateHTMLContent = (levelId: number, topic: TopicConfig): LevelL
 
 export const generateCSSContent = (levelId: number, topic: TopicConfig): LevelLearningContent => {
   const theoryContent = generateTheoryContent(levelId, 'CSS', topic);
-  
+
   return {
     title: `${topic.title} - Level ${levelId}`,
     topic: 'CSS',
@@ -303,7 +277,7 @@ export const generateAdvancedContent = (levelId: number, topic: TopicConfig): Le
 The theoretical foundation involves understanding design patterns, SOLID principles, and how to apply them in real-world scenarios. Advanced topics also cover understanding of distributed systems, microservices architecture, and modern DevOps practices.
 
 Mastering advanced concepts requires understanding both the technical implementation and the business impact of different architectural decisions.`;
-  
+
   return {
     title: `${topic.title} - Level ${levelId}`,
     topic: 'Advanced',

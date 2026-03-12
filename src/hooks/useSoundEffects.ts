@@ -25,6 +25,7 @@ export const useSoundEffects = () => {
   const playLevelUnlock = () => soundEffects.levelUnlock();
   const playLoading = () => soundEffects.loading();
   const playStreakBonus = () => soundEffects.streakBonus();
+  const playCartoonSuccess = () => soundEffects.playCartoonSuccess();
 
   return {
     playBlockClick,
@@ -49,6 +50,7 @@ export const useSoundEffects = () => {
     playHintPurchased,
     playLevelUnlock,
     playLoading,
-    playStreakBonus
+    playStreakBonus,
+    playCartoonSuccess
   };
 };

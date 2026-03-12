@@ -79,7 +79,7 @@ const DailyHintTracker: React.FC = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <Card className="bg-white/95 backdrop-blur-sm border-2 border-violet-100 shadow-2xl overflow-hidden rounded-3xl">
+      <Card className="bg-white/95 border-2 border-violet-100 shadow-2xl overflow-hidden rounded-3xl">
         <CardContent className="p-0">
           <DailyHintHeader
             freeHintDays={rewards.freeHintDays}

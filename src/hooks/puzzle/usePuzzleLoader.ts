@@ -15,6 +15,7 @@ interface PuzzleStateSetters {
   setShowCelebration: (show: boolean) => void;
   setCodeOutput: (output: string | null) => void;
   setConsoleOutput: (output: string) => void;
+  setCodeError?: (err: string | null) => void;
 }
 
 export const usePuzzleLoader = (levelIdNum: number, setters: PuzzleStateSetters) => {
@@ -29,6 +30,7 @@ export const usePuzzleLoader = (levelIdNum: number, setters: PuzzleStateSetters)
     setShowCelebration,
     setCodeOutput,
     setConsoleOutput,
+    setCodeError,
   } = setters;
 
   useEffect(() => {
@@ -84,6 +86,7 @@ export const usePuzzleLoader = (levelIdNum: number, setters: PuzzleStateSetters)
       setShowCelebration(false);
       setCodeOutput(null);
       setConsoleOutput("");
+      setCodeError?.(null); // Clear AI fixer error when navigating to a new level
 
     } catch (error) {
       console.error('Error loading puzzle data:', error);

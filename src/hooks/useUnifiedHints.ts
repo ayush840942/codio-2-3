@@ -4,6 +4,7 @@ import { useRewards } from '@/context/RewardsContext';
 import { useAuth } from '@/context/AuthContext';
 import { generatePuzzleHints, getDifficultyBasedHint } from '@/utils/puzzleHintGenerator';
 import { sanitizeCodeBlock } from '@/utils/inputValidation';
+import { toast } from 'sonner';
 
 export interface UnifiedHint {
   id: string;
@@ -14,7 +15,7 @@ export interface UnifiedHint {
 }
 
 export const useUnifiedHints = (levelId: number, difficulty: 'easy' | 'medium' | 'hard', currentPuzzle?: any, attempts: number = 0) => {
-  const { user } = useAuth();
+  const { user, isSubscribed, subscriptionTier } = useAuth();
   const { rewards, useHints } = useRewards();
   const [purchasedHints, setPurchasedHints] = useState<Set<string>>(new Set());
 
@@ -138,20 +139,25 @@ export const useUnifiedHints = (levelId: number, difficulty: 'easy' | 'medium' |
 
   const hints = generateUnifiedHints();
 
+  const isPremium = isSubscribed || subscriptionTier === 'trial' || subscriptionTier === 'pro' || subscriptionTier === 'elite' || subscriptionTier === 'premium-monthly' || subscriptionTier === 'premium-yearly';
+
   const canAffordHint = (hint: UnifiedHint): boolean => {
-    return rewards.hintPoints >= hint.cost;
+    if (isPremium) return true;
+    return (rewards.hintPoints || 0) >= hint.cost;
   };
 
   const purchaseHint = async (hint: UnifiedHint): Promise<boolean> => {
-    if (!canAffordHint(hint)) {
-      return false;
-    }
-
     if (purchasedHints.has(hint.id)) {
       return true; // Already purchased
     }
 
+    if (!canAffordHint(hint)) {
+      toast.error('Not enough points! Grab more in the Shop 💎');
+      return false;
+    }
+
     try {
+      // useHints handles the logic of deduction (skips if premium)
       const success = await useHints(hint.cost);
       if (success) {
         setPurchasedHints(prev => new Set([...prev, hint.id]));

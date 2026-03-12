@@ -1,93 +1,137 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, Code2 } from 'lucide-react';
+import { Sparkles, Code2, Play, Puzzle, Heart, Star } from 'lucide-react';
+import CodioMascot from '@/components/ui/CodioMascot';
 
 interface AppLoadingScreenProps {
   message?: string;
 }
 
 const AppLoadingScreen: React.FC<AppLoadingScreenProps> = ({
-  message = "Loading Codio..."
+  message = "READY TO CODE?"
 }) => {
+  const decorations = [
+    { Icon: Code2, x: '-32%', y: '-28%', size: 32, rotate: -15, delay: 0 },
+    { Icon: Play, x: '25%', y: '-22%', size: 28, rotate: 15, delay: 0.2 },
+    { Icon: Puzzle, x: '35%', y: '8%', size: 30, rotate: 10, delay: 0.4 },
+    { Icon: Heart, x: '-30%', y: '16%', size: 24, rotate: -10, delay: 0.6 },
+    { Icon: Star, x: '-20%', y: '-35%', size: 26, rotate: 5, delay: 0.8 },
+    { Icon: Sparkles, x: '25%', y: '28%', size: 28, rotate: 20, delay: 0.5 },
+  ];
+
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="text-center">
-        {/* Animated Logo */}
+    <div className="min-h-[100dvh] bg-gradient-to-b from-[#AEE4F8] via-[#E2EAFB] to-[#F9D3E0] flex flex-col items-center justify-center overflow-hidden font-draw relative">
+      {/* Background soft glow */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div className="w-[500px] h-[500px] bg-white opacity-20 blur-[100px] rounded-full" />
+      </div>
+
+      <div className="relative z-20 flex flex-col items-center w-full max-w-md px-6">
+        {/* Mascot Centerpiece */}
         <motion.div
-          className="relative mb-8"
-          animate={{
-            rotate: [0, 360],
-            scale: [1, 1.1, 1]
-          }}
+          initial={{ scale: 0, y: 50, opacity: 0 }}
+          animate={{ scale: 1, y: 0, opacity: 1 }}
           transition={{
-            rotate: { duration: 3, repeat: Infinity, ease: "linear" },
-            scale: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+            type: "spring",
+            damping: 12,
+            stiffness: 100,
+            delay: 0.2
           }}
+          className="relative mb-12"
         >
-          <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl opacity-30 scale-110"></div>
-          <div className="relative w-24 h-24 mx-auto bg-white rounded-full flex items-center justify-center shadow-2xl border-4 border-primary/20 overflow-hidden">
-            <img
-              src="/logo-robot.jpg"
-              alt="Codio Logo"
-              className="w-full h-full object-cover"
-            />
+          {/* Main Mascot - Cloud Character */}
+          <div className="relative z-10">
+            <CodioMascot pose="welcome" size="xl" className="drop-shadow-[0_15px_30px_rgba(0,0,0,0.1)]" />
           </div>
+
+          {/* Decorative scatter icons around mascot */}
+          {decorations.map((item, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{
+                opacity: 0.4,
+                scale: 1,
+                x: item.x,
+                y: item.y,
+                rotate: item.rotate
+              }}
+              transition={{ delay: 0.8 + item.delay, duration: 0.5 }}
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+              style={{ padding: '80px' }}
+            >
+              <item.Icon
+                size={item.size}
+                className="text-white fill-white/20"
+                strokeWidth={2.5}
+              />
+            </motion.div>
+          ))}
         </motion.div>
 
-        {/* Loading Text */}
-        <motion.h2
-          className="text-2xl font-bold text-foreground mb-4 flex items-center justify-center gap-2"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-        >
-          {message}
-          <Sparkles className="w-5 h-5 text-yellow-500 animate-pulse" />
-        </motion.h2>
+        {/* Branding */}
+        <div className="text-center space-y-4">
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="text-[5rem] sm:text-[6.5rem] font-black text-[#42326D] tracking-tighter flex justify-center leading-none"
+            style={{ textShadow: '4px 4px 0px rgba(255,255,255,0.8)' }}
+          >
+            {"Codio".split("").map((char, index) => (
+              <motion.span
+                key={index}
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{
+                  delay: 0.5 + index * 0.1,
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 10
+                }}
+                className="inline-block"
+              >
+                {char}
+              </motion.span>
+            ))}
+          </motion.h1>
 
-        {/* Loading Dots */}
-        <div className="flex justify-center space-x-2 mb-8">
-          {[0, 1, 2].map((index) => (
+          <motion.p
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 1.2, duration: 0.8, type: "spring" }}
+            className="text-2xl font-black text-[#42326D]/60 tracking-wider uppercase italic"
+          >
+            The Ultimate Coding Adventure
+          </motion.p>
+        </div>
+
+        {/* Minimal Progress Bouncing Dots */}
+        <div className="mt-8 flex items-center gap-3">
+          {[0, 1, 2].map((i) => (
             <motion.div
-              key={index}
-              className="w-3 h-3 bg-primary rounded-full"
+              key={i}
               animate={{
-                scale: [1, 1.5, 1],
-                opacity: [0.5, 1, 0.5]
+                y: [0, -10, 0],
+                opacity: [0.3, 1, 0.3]
               }}
               transition={{
-                duration: 1.5,
+                duration: 0.8,
                 repeat: Infinity,
-                delay: index * 0.2
+                delay: i * 0.15,
+                ease: "easeInOut"
               }}
+              className="w-2.5 h-2.5 bg-[#42326D]/30 rounded-full"
             />
           ))}
         </div>
+      </div>
 
-        {/* Progress Bar */}
-        <div className="w-64 bg-secondary rounded-full h-2 mx-auto overflow-hidden">
-          <motion.div
-            className="h-full bg-primary rounded-full"
-            initial={{ width: 0 }}
-            animate={{ width: "100%" }}
-            transition={{ duration: 2, ease: "easeInOut" }}
-          />
-        </div>
-
-        {/* Brand */}
-        <motion.div
-          className="mt-8"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-        >
-          <div className="flex items-center justify-center gap-2">
-            <span className="text-xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-              Codio
-            </span>
-          </div>
-        </motion.div>
+      {/* Decorative side symbols in background */}
+      <div className="absolute inset-0 pointer-events-none opacity-5 flex items-center justify-between px-10">
+        <Star size={150} className="rotate-12" />
+        <Puzzle size={150} className="-rotate-12" />
       </div>
     </div>
   );

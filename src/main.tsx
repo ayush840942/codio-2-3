@@ -1,5 +1,13 @@
 
 import { createRoot } from 'react-dom/client';
+import { Buffer } from 'buffer';
+
+// Polyfill Buffer and global for library compatibility in browser/mobile
+if (typeof window !== 'undefined') {
+  window.Buffer = Buffer;
+  window.global = window;
+}
+
 import App from './App.tsx';
 import './index.css';
 import { registerSW } from 'virtual:pwa-register';
@@ -9,6 +17,7 @@ registerSW({ immediate: true });
 
 // Capacitor imports for mobile
 import { Capacitor } from '@capacitor/core';
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
 // Mobile viewport configuration
 const configureMobileViewport = () => {
@@ -28,10 +37,10 @@ const configureMobileViewport = () => {
   const mobileMetaTags = [
     { name: 'apple-mobile-web-app-capable', content: 'yes' },
     { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
-    { name: 'apple-mobile-web-app-title', content: 'CodeZen' },
+    { name: 'apple-mobile-web-app-title', content: 'Codio' },
     { name: 'mobile-web-app-capable', content: 'yes' },
-    { name: 'theme-color', content: '#3B82F6' },
-    { name: 'msapplication-navbutton-color', content: '#3B82F6' }
+    { name: 'theme-color', content: '#FEF9C3' },
+    { name: 'msapplication-navbutton-color', content: '#FEF9C3' }
   ];
 
   mobileMetaTags.forEach(tag => {
@@ -110,7 +119,13 @@ const initializeMobile = async () => {
 
   configureMobileViewport();
   optimizeMobilePerformance();
+
+  // Mobile viewport configuration and performance optimizations
+  configureMobileViewport();
+  optimizeMobilePerformance();
 };
+
+import { GlobalErrorBoundary } from './components/GlobalErrorBoundary';
 
 // Initialize app
 const initApp = async () => {
@@ -129,13 +144,21 @@ const initApp = async () => {
     }
 
     const root = createRoot(rootElement);
-    root.render(<App />);
+    root.render(
+      <GlobalErrorBoundary>
+        <App />
+      </GlobalErrorBoundary>
+    );
   } catch (error) {
     console.error('Failed to initialize app:', error);
     const rootElement = document.getElementById("root");
     if (rootElement) {
       const root = createRoot(rootElement);
-      root.render(<App />);
+      root.render(
+        <GlobalErrorBoundary>
+          <App />
+        </GlobalErrorBoundary>
+      );
     }
   }
 };

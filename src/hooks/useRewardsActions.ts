@@ -10,31 +10,79 @@ export const useRewardsActions = (
   setRewards: React.Dispatch<React.SetStateAction<UserRewards>>,
   updateRewardsInDB: (updates: any) => Promise<boolean>
 ) => {
-  const { user } = useAuth();
+  const { user, isSubscribed, subscriptionTier } = useAuth();
 
-  const addXP = async (amount: number) => {
-    setRewards(prev => {
-      const newXP = prev.xp + amount;
-      const newTotalXP = prev.totalXpEarned + amount;
-      const newLevel = Math.floor(newXP / 100) + 1;
-      const oldLevel = Math.floor(prev.xp / 100) + 1;
+  const calculateLeague = (weeklyXp: number): 'Bronze' | 'Silver' | 'Gold' | 'Platinum' | 'Diamond' => {
+    if (weeklyXp >= 6000) return 'Diamond';
+    if (weeklyXp >= 3000) return 'Platinum';
+    if (weeklyXp >= 1500) return 'Gold';
+    if (weeklyXp >= 500) return 'Silver';
+    return 'Bronze';
+  };
 
-      if (newLevel > oldLevel) {
-        toast.success(`🎉 Level Up! You're now level ${newLevel}!`);
-      }
+  const addXP = async (amount: number): Promise<boolean> => {
+    if (!user) return false;
 
-      const updates = { xp: newXP, totalXpEarned: newTotalXP };
-      updateRewardsInDB(updates);
+    return new Promise((resolve) => {
+      setRewards(prev => {
+        const newXP = prev.xp + amount;
+        const newTotalXP = prev.totalXpEarned + amount;
+        const newWeeklyXP = (prev.weeklyXp || 0) + amount;
+        const newLeague = calculateLeague(newWeeklyXP);
+        const newLevel = Math.floor(newXP / 100) + 1;
+        const oldLevel = Math.floor(prev.xp / 100) + 1;
 
-      return { ...prev, xp: newXP, totalXpEarned: newTotalXP };
+        if (newLevel > oldLevel) {
+          toast.success(`🎉 Level Up! You're now level ${newLevel}!`);
+        }
+
+        if (newLeague !== prev.league) {
+          toast.success(`🎖️ PROMOTED! You reached the ${newLeague} League!`);
+        }
+
+        // Sync to database and localStorage
+        updateRewardsInDB({
+          xp: newXP,
+          total_xp_earned: newTotalXP,
+          weekly_xp: newWeeklyXP,
+          league: newLeague,
+          updated_at: new Date().toISOString()
+        } as any).then(success => {
+          if (success) {
+            console.log('✅ XP & League synced to database');
+          } else {
+            console.warn('⚠️ XP failed to sync to database, using local backup');
+          }
+          resolve(success);
+        });
+
+        return { ...prev, xp: newXP, totalXpEarned: newTotalXP, weeklyXp: newWeeklyXP, league: newLeague };
+      });
     });
   };
 
-  const addCoins = async (amount: number) => {
-    setRewards(prev => {
-      const newCoins = prev.coins + amount;
-      updateRewardsInDB({ coins: newCoins });
-      return { ...prev, coins: newCoins };
+  const addCoins = async (amount: number): Promise<boolean> => {
+    if (!user) return false;
+
+    return new Promise((resolve) => {
+      setRewards(prev => {
+        const newCoins = prev.coins + amount;
+
+        // Sync to database and localStorage
+        updateRewardsInDB({
+          coins: newCoins,
+          updated_at: new Date().toISOString()
+        } as any).then(success => {
+          if (success) {
+            console.log('✅ Coins synced to database');
+          } else {
+            console.warn('⚠️ Coins failed to sync to database, using local backup');
+          }
+          resolve(success);
+        });
+
+        return { ...prev, coins: newCoins };
+      });
     });
   };
 
@@ -62,7 +110,18 @@ export const useRewardsActions = (
   };
 
   const useHint = async (): Promise<boolean> => {
-    if (!user || (rewards.hintPoints || 0) < 5) {
+    if (!user) return false;
+
+    // Premium/Trial users don't spend points
+    const isPremium = isSubscribed || subscriptionTier === 'trial' || subscriptionTier === 'pro' || subscriptionTier === 'elite' || subscriptionTier === 'premium-monthly' || subscriptionTier === 'premium-yearly';
+
+    if (isPremium) {
+      toast.success('Premium Benefit: Free Hint! ⚡');
+      return true;
+    }
+
+    if ((rewards.hintPoints || 0) < 5) {
+      toast.error('Not enough hint points! Visit the Shop or wait for Daily Gift.');
       return false;
     }
 
@@ -89,7 +148,17 @@ export const useRewardsActions = (
   };
 
   const useHints = async (amount: number): Promise<boolean> => {
-    if (!user || (rewards.hintPoints || 0) < amount) {
+    if (!user) return false;
+
+    // Premium users don't spend points
+    const isPremium = isSubscribed || subscriptionTier === 'trial' || subscriptionTier === 'pro' || subscriptionTier === 'elite' || subscriptionTier === 'premium-monthly' || subscriptionTier === 'premium-yearly';
+
+    if (isPremium) {
+      toast.success('Premium Benefit: Free Access! ⚡');
+      return true;
+    }
+
+    if ((rewards.hintPoints || 0) < amount) {
       return false;
     }
 
@@ -115,7 +184,7 @@ export const useRewardsActions = (
     }
   };
 
-  const updateStreak = async () => {
+  const updateStreak = async (): Promise<void> => {
     const today = new Date().toISOString().split('T')[0];
     const lastClaim = rewards.lastClaimDate;
 

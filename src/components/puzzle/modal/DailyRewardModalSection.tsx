@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Gift, Clock, Star, Crown } from 'lucide-react';
+import { Gift, Clock, Star, Crown, Sparkles } from 'lucide-react';
 import { useRewards } from '@/context/RewardsContext';
 import { toast } from 'sonner';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { DrawnButton, DrawnCard } from '@/components/ui/HandDrawnComponents';
 
 const DailyRewardModalSection = () => {
   const { canClaimDaily, claimDailyReward, rewards } = useRewards();
@@ -12,18 +12,18 @@ const DailyRewardModalSection = () => {
 
   const getTimeUntilNextClaim = () => {
     if (!rewards.lastClaimDate || canClaimDaily) return '';
-    
+
     const lastClaim = new Date(rewards.lastClaimDate + 'T00:00:00');
     const nextClaim = new Date(lastClaim.getTime() + 24 * 60 * 60 * 1000);
     const now = new Date();
-    
+
     if (now >= nextClaim) return '';
-    
+
     const diff = nextClaim.getTime() - now.getTime();
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-    
+
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
@@ -37,124 +37,81 @@ const DailyRewardModalSection = () => {
 
   const handleClaimReward = async () => {
     try {
-      console.log('Claiming daily reward from modal...');
       const success = await claimDailyReward();
-      console.log('Modal claim result:', success);
-      
       if (success) {
-        toast.success("Daily reward claimed! 🎉", {
-          description: "You received 5 hint points!"
+        toast.success("HURRAY! 🎉", {
+          description: "Mascot found 5 hint points for you!"
         });
-      } else {
-        if (rewards.freeHintDays <= 0) {
-          toast.error("Free hint period ended", {
-            description: "Your 20-day free hint period has ended"
-          });
-        } else {
-          toast.error("Already claimed today!", {
-            description: "Come back tomorrow for your next reward"
-          });
-        }
       }
     } catch (error) {
-      console.error('Error claiming daily reward in modal:', error);
-      toast.error("Failed to claim daily reward", {
-        description: "Please try again later"
-      });
+      toast.error("Oops! Try again later.");
     }
   };
 
-  const canClaim = canClaimDaily && rewards.freeHintDays > 0;
+  const canClaim = canClaimDaily() && rewards.freeHintDays > 0;
 
   return (
-    <motion.div 
-      className="bg-white/95 backdrop-blur-sm p-8 rounded-3xl border border-slate-200 shadow-xl relative overflow-hidden"
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.3 }}
-    >
-      {/* Elegant background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-50/80 to-white/60 rounded-3xl" />
-      
-      <div className="relative z-10">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-          <div className="flex items-start gap-5">
-            <motion.div 
-              className="w-14 h-14 bg-gradient-to-br from-orange-500 to-amber-600 rounded-2xl flex items-center justify-center shadow-lg"
-              whileHover={{ scale: 1.1, rotate: 5 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Crown className="h-7 w-7 text-white" />
-            </motion.div>
-            <div>
-              <h3 className="font-bold text-xl text-slate-800 flex items-center gap-3 mb-2">
-                Daily Rewards
-                <div className="px-2 py-1 bg-slate-100 rounded-lg">
-                  <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Premium</span>
-                </div>
-              </h3>
-              <p className="text-slate-600 mb-3 font-medium">
-                Claim 5 hint points daily and build your learning streak
-              </p>
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="px-3 py-1 bg-slate-100 rounded-full border border-slate-200">
-                  <span className="font-bold text-slate-700 text-sm flex items-center gap-1">
-                    <Star className="h-3 w-3 text-amber-500" />
-                    {rewards.hintPoints} hints
-                  </span>
-                </div>
-                {rewards.freeHintDays > 0 && (
-                  <div className="px-3 py-1 bg-slate-100 rounded-full border border-slate-200">
-                    <span className="font-bold text-slate-700 text-sm">
-                      {rewards.freeHintDays} days left
-                    </span>
-                  </div>
-                )}
-                {timeRemaining && !canClaim && (
-                  <div className="px-3 py-1 bg-orange-100 rounded-full border border-orange-200">
-                    <span className="font-bold text-orange-700 text-sm flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {timeRemaining}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
+    <DrawnCard className="bg-white p-6 sm:p-8 overflow-hidden relative font-draw">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-cc-yellow/20 rounded-full -mr-16 -mt-16" />
+
+      <div className="relative z-10 flex flex-col sm:flex-row items-center gap-8">
+        {/* Gift Icon Section */}
+        <div className="relative">
+          <div className={`w-32 h-32 rounded-3xl border-4 border-black bg-cc-yellow flex items-center justify-center shadow-comic-sm ${!canClaim ? 'grayscale opacity-50' : ''}`}>
+            <Gift className="w-16 h-16 text-black" strokeWidth={2.5} />
           </div>
-          
-          <div className="flex-shrink-0">
-            <Button
-              onClick={handleClaimReward} 
-              disabled={!canClaim}
-              size="lg"
-              className={`
-                h-14 px-6 rounded-2xl font-bold transition-all duration-300 border-0 shadow-lg
-                ${canClaim 
-                  ? "bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:via-amber-600 hover:to-orange-700 text-white hover:shadow-xl" 
-                  : "bg-slate-200 text-slate-500 cursor-not-allowed shadow-none"
-                }
-              `}
-            >
-              <div className="flex items-center gap-3">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                  canClaim ? 'bg-white/20' : 'bg-slate-300'
-                }`}>
-                  <Gift className="h-3 w-3" />
-                </div>
-                <span>
-                  {canClaim 
-                    ? "Claim 5 Hints" 
-                    : rewards.freeHintDays <= 0 
-                      ? "Period Complete"
-                      : "Claimed Today"
-                  }
-                </span>
-              </div>
-            </Button>
+
+          <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-black text-white px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg border-2 border-white shadow-comic-sm whitespace-nowrap">
+            {canClaim ? "GIFT FOR YOU!" : "RESTING..."}
           </div>
         </div>
+
+        {/* Content Area */}
+        <div className="flex-1 text-center sm:text-left space-y-4">
+          <div>
+            <h3 className="text-3xl font-black text-black uppercase tracking-tight italic flex items-center justify-center sm:justify-start gap-2">
+              DAILY GIFTS <Gift className="w-6 h-6" />
+            </h3>
+            <p className="text-lg font-bold text-black/60 leading-tight">
+              {canClaim
+                ? "You've unlocked a daily surprise!"
+                : "Check back soon for more goodies."}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
+            <div className="bg-cc-yellow border-3 border-black px-4 py-1 rounded-xl shadow-comic-sm flex items-center gap-2">
+              <Star className="w-4 h-4 text-black fill-black" />
+              <span className="font-black text-sm uppercase tracking-tighter">
+                {rewards.hintPoints} HINTS
+              </span>
+            </div>
+
+            <AnimatePresence>
+              {timeRemaining && !canClaim && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-cc-blue border-3 border-black px-4 py-1 rounded-xl shadow-comic-sm flex items-center gap-2"
+                >
+                  <Clock className="w-4 h-4 text-black" />
+                  <span className="font-black text-sm tracking-tighter uppercase whitespace-nowrap">{timeRemaining}</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          <DrawnButton
+            onClick={handleClaimReward}
+            disabled={!canClaim}
+            variant={canClaim ? 'accent' : 'outlined'}
+            className={`w-full h-16 text-2xl transition-all ${!canClaim ? 'bg-black/5 opacity-50 shadow-none hover:shadow-none' : 'bg-cc-green shadow-comic'}`}
+          >
+            {canClaim ? "GRAB 5 HINTS!" : "CLAIMED"}
+          </DrawnButton>
+        </div>
       </div>
-    </motion.div>
+    </DrawnCard>
   );
 };
 

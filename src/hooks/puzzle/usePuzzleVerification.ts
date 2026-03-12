@@ -22,6 +22,7 @@ interface PuzzleVerificationSetters {
   setFeedback: (feedback: 'correct' | 'incorrect' | null) => void;
   setShowCelebration: (show: boolean) => void;
   setAttempts: React.Dispatch<React.SetStateAction<number>>;
+  setCodeError?: (err: string | null) => void;
 }
 
 export const usePuzzleVerification = (
@@ -36,11 +37,11 @@ export const usePuzzleVerification = (
   const { showInterstitial } = useInterstitialAd();
 
   const { currentPuzzle, placedBlocks, levelIdNum } = state;
-  const { setCodeOutput, setConsoleOutput, setFeedback, setShowCelebration, setAttempts } = setters;
+  const { setCodeOutput, setConsoleOutput, setFeedback, setShowCelebration, setAttempts, setCodeError } = setters;
 
   const currentLevel = gameState.levels.find(level => level.id === levelIdNum);
 
-  const runCode = useCallback(() => {
+  const runCode = useCallback(async () => {
     try {
       if (!currentPuzzle) {
         playError();
@@ -66,7 +67,7 @@ export const usePuzzleVerification = (
         return;
       }
 
-      const { output, isCorrect, error } = executeCode(placedBlocks, currentPuzzle.expectedOutput);
+      const { output, isCorrect, error } = await executeCode(placedBlocks, currentPuzzle.expectedOutput);
       const outputString = String(output || "No output produced");
 
       setCodeOutput(outputString);
@@ -76,11 +77,13 @@ export const usePuzzleVerification = (
         playSuccess();
         toast.success("🎉 Perfect! Your code produces the correct output!");
         setFeedback('correct');
+        setCodeError?.(null);
       } else {
         playError();
         const errorMessage = error || `Your output "${outputString}" doesn't match the expected output`;
         toast.error(errorMessage);
         setFeedback('incorrect');
+        setCodeError?.(errorMessage);
       }
     } catch (error) {
       console.error('Error running code:', error);
@@ -92,7 +95,7 @@ export const usePuzzleVerification = (
     }
   }, [currentPuzzle, placedBlocks, playError, playRunCode, playSuccess, setCodeOutput, setConsoleOutput, setFeedback]);
 
-  const handleVerifySolution = useCallback(() => {
+  const handleVerifySolution = useCallback(async () => {
     try {
       // Check if player has hearts
       if (!canPlay) {
@@ -129,53 +132,32 @@ export const usePuzzleVerification = (
       }
 
       // Then execute and check output
-      const { output, isCorrect, error } = executeCode(placedBlocks, currentPuzzle.expectedOutput);
+      const { output, isCorrect, error } = await executeCode(placedBlocks, currentPuzzle.expectedOutput);
       const outputString = String(output || "No output produced");
 
       setCodeOutput(outputString);
       setConsoleOutput(outputString);
 
       if (isCorrect) {
-        playLevelComplete();
-        setFeedback('correct');
-        setShowCelebration(true);
-        if ('vibrate' in navigator) navigator.vibrate([100, 50, 100]);
-
-        // Complete the level
-        completeLevel(levelIdNum, 0);
-        toast.success(`🎉 Level ${levelIdNum} completed! Well done!`);
-
-        showInterstitial();
-
-        // Navigate to next level after delay
+        // Defer audio to prevent main-thread locking during context update
         setTimeout(() => {
-          const nextLevelId = levelIdNum + 1;
-          const maxLevels = getMaxLevels();
+          playLevelComplete();
+        }, 300);
 
-          console.log(`Current level: ${levelIdNum}, Next level: ${nextLevelId}, Max levels: ${maxLevels}`);
+        setFeedback('correct');
+        // We no longer setShowCelebration(true) or navigate here
+        // The UI will handle showing the output and a "Claim Reward" button
 
-          if (nextLevelId <= maxLevels && nextLevelId <= 200) {
-            if (canAccessLevel(nextLevelId)) {
-              console.log(`Navigating to level ${nextLevelId}`);
-              toast.info(`🚀 Welcome to Level ${nextLevelId}!`);
-              navigate(`/puzzle/${nextLevelId}`, { replace: true });
-            } else {
-              console.log(`Level ${nextLevelId} not accessible, going to subscription`);
-              toast.info('🔐 Unlock more levels with premium!');
-              navigate('/subscription', { replace: true });
-            }
-          } else {
-            console.log('All levels completed, going to level map');
-            toast.success('🏆 Congratulations! You completed all levels!');
-            navigate('/levels', { replace: true });
-          }
-        }, 2500);
+        // Complete the level in state, but don't move away yet
+        completeLevel(levelIdNum, 0);
+        toast.success(`🎉 Code verified! Well done!`);
+        setCodeError?.(null);
       } else {
-        playError();
+        setTimeout(() => playError(), 150);
         setFeedback('incorrect');
-        if ('vibrate' in navigator) navigator.vibrate(200);
         const errorMessage = error || "Incorrect solution. Check the order of your blocks and try again!";
         toast.error(errorMessage);
+        setCodeError?.(errorMessage);
         // Lose a heart on incorrect attempt
         loseHeart();
         const remainingHearts = hearts - 1;
