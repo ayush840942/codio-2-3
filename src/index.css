@@ -206,7 +206,6 @@ body {
   -webkit-overflow-scrolling: touch;
   font-family: var(--font-sans);
   font-weight: 400;
-  padding-top: var(--safe-area-top);
   padding-bottom: var(--safe-area-bottom);
 }
 

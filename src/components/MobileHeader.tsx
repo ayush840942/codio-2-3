@@ -52,7 +52,7 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({
             animate={{ y: 0 }}
             style={{
                 paddingTop: 'var(--safe-area-top)',
-                height: 'calc(var(--safe-area-top) + 2.75rem)'
+                height: 'calc(var(--safe-area-top) + 3.5rem)'
             }}
         >
             <div className="flex items-center gap-3">

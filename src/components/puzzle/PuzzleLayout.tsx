@@ -146,7 +146,7 @@ const PuzzleLayout: React.FC<PuzzleLayoutProps> = ({
         onClose={() => setShowHeartsShop(false)}
       />
 
-      <MobileScrollArea className="h-screen w-full" style={{ paddingTop: 'calc(var(--safe-area-top) + 3rem)' }}>
+      <MobileScrollArea className="h-screen w-full" style={{ paddingTop: 'calc(var(--safe-area-top) + 4rem)' }}>
         <div className="max-w-2xl mx-auto px-4 py-4 space-y-6 pb-20">
           {/* Level Header Container */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>

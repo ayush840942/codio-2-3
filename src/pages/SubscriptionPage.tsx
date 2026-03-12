@@ -201,7 +201,7 @@ const SubscriptionPage: React.FC = () => {
     <div className="min-h-[100dvh] bg-gradient-to-b from-pastel-yellow/30 to-white font-draw overflow-x-hidden">
       <PaymentLoadingOverlay isVisible={isProcessing} />
 
-      <div className="max-w-md mx-auto px-5 pb-28" style={{ paddingTop: 'calc(var(--safe-area-top) + 3rem)' }}>
+      <div className="max-w-md mx-auto px-5 pb-28" style={{ paddingTop: 'calc(var(--safe-area-top) + 4rem)' }}>
         {/* Unified Mobile Header */}
         <MobileHeader
           title="Go Premium"

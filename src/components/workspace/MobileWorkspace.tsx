@@ -111,7 +111,7 @@ const MobileWorkspace: React.FC<MobileWorkspaceProps> = ({
       />
 
       {/* Main Split Interface */}
-      <MobileScrollArea className="h-screen" style={{ paddingTop: 'calc(var(--safe-area-top) + 3rem)' }}>
+      <MobileScrollArea className="h-screen" style={{ paddingTop: 'calc(var(--safe-area-top) + 4rem)' }}>
 
         {/* TOP HALF: Live Preview (Mobile Simulator) */}
         <div className="flex-[0.45] bg-stripes-light border-b-4 border-black relative overflow-hidden flex items-center justify-center p-4">

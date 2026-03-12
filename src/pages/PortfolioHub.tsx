@@ -35,7 +35,7 @@ const PortfolioHub = () => {
         }
       />
 
-      <div className="px-6 py-8" style={{ paddingTop: 'calc(var(--safe-area-top) + 3rem)' }}>
+      <div className="px-6 py-8" style={{ paddingTop: 'calc(var(--safe-area-top) + 4rem)' }}>
 
         <div className="px-6 space-y-6">
           {portfolioProjects.map((project, idx) => (

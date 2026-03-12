@@ -43,17 +43,26 @@ const PublicProfile = () => {
     React.useEffect(() => {
         const fetchPublicData = async () => {
             const profileId = id || (currentUser?.id ? `u_${currentUser.id}` : null);
+            console.log('PublicProfile initial profileId:', profileId);
 
             if (!profileId) {
+                console.warn('No profileId available for PublicProfile');
                 setLoading(false);
                 return;
             }
 
             setLoading(true);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => {
+                controller.abort();
+                console.error('PublicProfile fetch timed out');
+            }, 10000); // 10s timeout
+
             try {
                 // Handle u_ prefix for mapped IDs
-                const dbId = profileId.startsWith('u_') ? toDatabaseId(profileId.replace('u_', '')) : profileId;
-                console.log('Fetching public profile for:', dbId);
+                const rawId = profileId.startsWith('u_') ? profileId.replace('u_', '') : profileId;
+                const dbId = toDatabaseId(rawId);
+                console.log('Fetching public profile for mapped dbId:', dbId);
 
                 // 1. Fetch Profile
                 const { data: profileData, error: profileError } = await supabase
@@ -63,9 +72,14 @@ const PublicProfile = () => {
                     .maybeSingle();
 
                 if (profileError) throw profileError;
-                setTargetProfile(profileData);
 
-                if (profileData) {
+                if (!profileData) {
+                    console.log('No profile found in DB for ID:', dbId);
+                    setTargetProfile(null);
+                } else {
+                    console.log('Profile data loaded successfully');
+                    setTargetProfile(profileData);
+
                     // 2. Fetch Rewards
                     const { data: rewardsData } = await supabase
                         .from('user_rewards')
@@ -89,16 +103,21 @@ const PublicProfile = () => {
                         .eq('published', true);
                     setTargetProjects(projectData || []);
                 }
-            } catch (err) {
+            } catch (err: any) {
                 console.error('Error fetching public profile:', err);
-                toast.error('Could not load profile');
+                if (err.name === 'AbortError') {
+                    toast.error('Connection timed out. Check your network.');
+                } else {
+                    toast.error('Could not load profile');
+                }
             } finally {
+                clearTimeout(timeoutId);
                 setLoading(false);
             }
         };
 
         fetchPublicData();
-    }, [id, currentUser]);
+    }, [id, currentUser?.id]);
 
     const completedLevels = targetProgress.filter(l => l.completed).length;
     const isOwner = !id || (currentUser && (id === currentUser.id || id === `u_${currentUser.id}`));
@@ -143,7 +162,7 @@ const PublicProfile = () => {
                 }
             />
 
-            <div className="px-6 max-w-lg mx-auto space-y-8" style={{ paddingTop: 'calc(var(--safe-area-top) + 3rem)' }}>
+            <div className="px-6 max-w-lg mx-auto space-y-8" style={{ paddingTop: 'calc(var(--safe-area-top) + 4rem)' }}>
                 {/* Profile Header */}
                 <div className="flex flex-col items-center text-center relative">
                     <div className="relative mb-6">
