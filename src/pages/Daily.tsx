@@ -138,7 +138,7 @@ const Daily = () => {
                 showStats
             />
 
-            <div className="max-w-2xl mx-auto px-4 pb-32" style={{ paddingTop: 'calc(var(--safe-area-top) + 3.5rem)' }}>
+            <div className="max-w-2xl mx-auto px-4 pb-32" style={{ paddingTop: 'calc(var(--safe-area-top) + 3rem)' }}>
                 {/* Tab Pills */}
                 <div className="flex gap-3 mb-6 sticky top-[72px] z-40 pt-2">
                     {(['today', 'past'] as const).map(tab => (

@@ -56,7 +56,7 @@ const MobileLearningLayout: React.FC<MobileLearningLayoutProps> = ({
         }
       />
 
-      <div className="p-4" style={{ paddingTop: 'calc(var(--safe-area-top) + 3.5rem)' }}>
+      <div className="p-4" style={{ paddingTop: 'calc(var(--safe-area-top) + 3rem)' }}>
         <div className="h-4 bg-white border-3 border-black rounded-full overflow-hidden shadow-comic-sm">
           <motion.div
             className="h-full bg-pastel-blue border-r-3 border-black"

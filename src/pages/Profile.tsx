@@ -188,7 +188,7 @@ const Profile = () => {
 
   return (
     <div className="min-h-[100dvh] relative font-draw pb-32">
-      <div className="max-w-2xl mx-auto px-6 pb-12 space-y-12" style={{ paddingTop: 'calc(var(--safe-area-top) + 3.5rem)' }}>
+      <div className="max-w-2xl mx-auto px-6 pb-12 space-y-12" style={{ paddingTop: 'calc(var(--safe-area-top) + 3rem)' }}>
 
         {/* Unified Mobile Header */}
         <MobileHeader
