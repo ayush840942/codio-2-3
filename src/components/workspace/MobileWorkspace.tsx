@@ -5,6 +5,7 @@ import { DrawnButton } from '@/components/ui/HandDrawnComponents';
 import { useNavigate } from 'react-router-dom';
 import { haptics } from '@/utils/haptics';
 import MobileHeader from '@/components/MobileHeader';
+import { MobileScrollArea } from '@/components/ui/mobile-scroll-area';
 import { ImpactStyle, NotificationType } from '@capacitor/haptics';
 
 export interface MobileWorkspaceProps {
@@ -110,7 +111,7 @@ const MobileWorkspace: React.FC<MobileWorkspaceProps> = ({
       />
 
       {/* Main Split Interface */}
-      <div className="flex-1 flex flex-col overflow-hidden relative">
+      <MobileScrollArea className="h-screen" style={{ paddingTop: 'calc(var(--safe-area-top) + 3.5rem)' }}>
 
         {/* TOP HALF: Live Preview (Mobile Simulator) */}
         <div className="flex-[0.45] bg-stripes-light border-b-4 border-black relative overflow-hidden flex items-center justify-center p-4">
@@ -190,7 +191,7 @@ const MobileWorkspace: React.FC<MobileWorkspaceProps> = ({
             />
           </div>
         </div>
-      </div>
+      </MobileScrollArea>
     </div>
   );
 };

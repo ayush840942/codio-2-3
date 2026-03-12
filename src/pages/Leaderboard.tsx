@@ -65,7 +65,7 @@ const Leaderboard: React.FC = () => {
 
     return (
         <div className="min-h-[100dvh] bg-pastel-yellow/20 pb-32 font-draw overflow-x-hidden">
-            <div className="px-6 space-y-8 max-w-md mx-auto" style={{ paddingTop: 'calc(var(--safe-area-top) + 4.5rem)' }}>
+            <div className="px-6 space-y-8 max-w-md mx-auto" style={{ paddingTop: 'calc(var(--safe-area-top) + 4rem)' }}>
                 {/* Unified Mobile Header */}
                 <MobileHeader
                     title="Hall of Fame"

@@ -204,7 +204,7 @@ const Index = () => {
       {/* Unified Mobile Header */}
       <MobileHeader showLogo showProfile showStats className="md:hidden" />
 
-      <div className="px-6 space-y-12" style={{ paddingTop: 'calc(var(--safe-area-top) + 4.5rem)' }}>
+      <div className="px-6 space-y-12" style={{ paddingTop: 'calc(var(--safe-area-top) + 4rem)' }}>
 
         {/* Continue Learning Hero Card */}
         <motion.div

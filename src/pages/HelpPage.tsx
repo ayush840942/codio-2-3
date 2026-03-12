@@ -104,7 +104,7 @@ const HelpPage: React.FC = () => {
       <div className="absolute inset-0 opacity-10 pointer-events-none"
         style={{ backgroundImage: 'radial-gradient(circle, #000 1.2px, transparent 1.2px)', backgroundSize: '25px 25px' }} />
 
-      <div className="px-5 pb-10 space-y-10 max-w-md mx-auto relative z-10" style={{ paddingTop: 'calc(var(--safe-area-top) + 4.5rem)' }}>
+      <div className="px-5 pb-10 space-y-10 max-w-md mx-auto relative z-10" style={{ paddingTop: 'calc(var(--safe-area-top) + 4rem)' }}>
         {/* Unified Mobile Header */}
         <MobileHeader
           title="Support"

@@ -143,7 +143,7 @@ const PublicProfile = () => {
                 }
             />
 
-            <div className="px-6 max-w-lg mx-auto space-y-8" style={{ paddingTop: 'calc(var(--safe-area-top) + 4.5rem)' }}>
+            <div className="px-6 max-w-lg mx-auto space-y-8" style={{ paddingTop: 'calc(var(--safe-area-top) + 4rem)' }}>
                 {/* Profile Header */}
                 <div className="flex flex-col items-center text-center relative">
                     <div className="relative mb-6">

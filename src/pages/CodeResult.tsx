@@ -168,7 +168,7 @@ const CodeResult = () => {
     return (
       <div className="min-h-[100dvh] bg-puzzle-light">
         <NavBar />
-        <div className="min-h-[100dvh] flex flex-col items-center justify-center p-4 text-center bg-background" style={{ paddingTop: 'calc(var(--safe-area-top) + 4.5rem)' }}>
+        <div className="min-h-[100dvh] flex flex-col items-center justify-center p-4 text-center bg-background" style={{ paddingTop: 'calc(var(--safe-area-top) + 4rem)' }}>
           <MobileHeader title="Not Found" showBack />
           <h1 className="text-2xl font-bold mb-4">Level Not Found</h1>
           <Button onClick={() => navigate('/levels')}>Back to Level Map</Button>
@@ -195,7 +195,7 @@ const CodeResult = () => {
 
       <LevelCompleteModal show={showCelebration} xpReward={currentLevel.xpReward} />
 
-      <div className="max-w-4xl mx-auto px-4 py-6" style={{ paddingTop: 'calc(var(--safe-area-top) + 4.5rem)' }}>
+      <div className="max-w-4xl mx-auto px-4 py-6" style={{ paddingTop: 'calc(var(--safe-area-top) + 4rem)' }}>
         <CodeResultHeader currentLevel={currentLevel} onNextLevel={handleNextLevel} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
